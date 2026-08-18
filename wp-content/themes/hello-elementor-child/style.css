@@ -1,0 +1,21 @@
+/*
+Theme Name: Hello Elementor Child
+Theme URI: https://researchlabusa.com/
+Description: Child theme of Hello Elementor for researchlabusa.com. Custom CSS and PHP live here so that updates to Hello Elementor never overwrite your work.
+Author: Research Lab USA
+Template: hello-elementor
+Version: 1.0.0
+Requires at least: 6.0
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: hello-elementor-child
+*/
+
+/* ---------------------------------------------------------------------------
+   Custom styles for researchlabusa.com
+   ---------------------------------------------------------------------------
+   Anything you add below overrides Hello Elementor. Most layout and styling is
+   better done in Elementor itself; use this file for rules Elementor can't
+   express, or for site-wide tweaks you want kept in version control.
+--------------------------------------------------------------------------- */

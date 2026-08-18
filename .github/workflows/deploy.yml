@@ -1,0 +1,130 @@
+name: Deploy to SiteGround
+
+# Auto-deploy on every push to the production branch.
+# Also runnable manually from the Actions tab (workflow_dispatch).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run two deploys at once; let an in-progress deploy finish.
+concurrency:
+  group: deploy-siteground-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: rsync wp-content to SiteGround
+    runs-on: ubuntu-latest
+
+    # Secrets are passed as env vars rather than inlined into the shell, so odd
+    # characters in a value can't break quoting.
+    env:
+      SG_HOST: ${{ secrets.SITEGROUND_SSH_HOST }}
+      SG_USER: ${{ secrets.SITEGROUND_SSH_USER }}
+      SG_PORT: ${{ secrets.SITEGROUND_SSH_PORT }}
+      SG_PATH: ${{ secrets.SITEGROUND_REMOTE_PATH }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Reports which secrets are missing instead of failing with a bare
+      # exit code. Values are never printed — only whether they are set.
+      - name: Check required secrets are set
+        run: |
+          missing=0
+          for name in SG_HOST SG_USER SG_PORT SG_PATH; do
+            if [ -z "${!name}" ]; then
+              case "$name" in
+                SG_HOST) echo "::error::Secret SITEGROUND_SSH_HOST is empty or not set" ;;
+                SG_USER) echo "::error::Secret SITEGROUND_SSH_USER is empty or not set" ;;
+                SG_PORT) echo "::error::Secret SITEGROUND_SSH_PORT is empty or not set" ;;
+                SG_PATH) echo "::error::Secret SITEGROUND_REMOTE_PATH is empty or not set" ;;
+              esac
+              missing=1
+            fi
+          done
+          if [ -z "${{ secrets.SITEGROUND_SSH_KEY }}" ]; then
+            echo "::error::Secret SITEGROUND_SSH_KEY is empty or not set"
+            missing=1
+          fi
+          [ "$missing" -eq 0 ] || exit 1
+          echo "All five secrets are present."
+          echo "Port is ${#SG_PORT} chars, host is ${#SG_HOST} chars (values hidden)."
+
+      - name: Write and validate the SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SITEGROUND_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # A private key must open with a BEGIN ... PRIVATE KEY header. A public
+          # key (ssh-ed25519 AAAA... / ssh-rsa AAAA...) is the usual mix-up.
+          if head -n 1 ~/.ssh/deploy_key | grep -qE '^(ssh-(rsa|ed25519|dss)|ecdsa-sha2-)'; then
+            echo "::error::SITEGROUND_SSH_KEY contains a PUBLIC key. GitHub needs the PRIVATE key (the multi-line -----BEGIN OPENSSH PRIVATE KEY----- block). The public key is the half that goes into SiteGround."
+            exit 1
+          fi
+          if ! head -n 1 ~/.ssh/deploy_key | grep -q 'BEGIN .*PRIVATE KEY'; then
+            echo "::error::SITEGROUND_SSH_KEY does not start with a '-----BEGIN ... PRIVATE KEY-----' line. Paste the whole private key file, including its BEGIN and END lines."
+            exit 1
+          fi
+
+          # -P '' supplies an empty passphrase so an encrypted key fails fast
+          # instead of hanging on a prompt.
+          if ssh-keygen -y -P '' -f ~/.ssh/deploy_key > ~/.ssh/deploy_key.pub 2>/tmp/keyerr; then
+            echo "Private key loaded successfully. Its public half is:"
+            cat ~/.ssh/deploy_key.pub
+            echo "^ This exact line must be registered in SiteGround (Site Tools -> Devs -> SSH Keys Manager)."
+          else
+            if grep -qi 'incorrect passphrase\|load failed' /tmp/keyerr; then
+              echo "::error::The private key is passphrase-protected. GitHub Actions cannot enter a passphrase. Remove it locally with:  ssh-keygen -p -f <keyfile> -N \"\"   then update the SITEGROUND_SSH_KEY secret."
+            else
+              echo "::error::The private key could not be parsed (invalid or truncated). Re-copy the full key file contents into the SITEGROUND_SSH_KEY secret."
+            fi
+            sed 's/^/  /' /tmp/keyerr
+            exit 1
+          fi
+
+      - name: Trust the SiteGround host key
+        run: |
+          # Non-fatal: if keyscan is blocked or slow, fall back to accept-new
+          # at connect time rather than failing the whole deploy.
+          if ssh-keyscan -T 15 -p "$SG_PORT" -H "$SG_HOST" >> ~/.ssh/known_hosts 2>/tmp/scanerr; then
+            echo "Host key recorded."
+          else
+            echo "::warning::ssh-keyscan did not return a host key; continuing with StrictHostKeyChecking=accept-new."
+            sed 's/^/  /' /tmp/scanerr || true
+          fi
+
+      - name: Verify SSH connection
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$SG_PORT" \
+            -o StrictHostKeyChecking=accept-new \
+            -o BatchMode=yes \
+            "$SG_USER@$SG_HOST" \
+            'echo "SSH OK on $(hostname)"; echo "Home: $(pwd)"'
+
+      - name: Confirm the remote path exists
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$SG_PORT" \
+            -o StrictHostKeyChecking=accept-new -o BatchMode=yes \
+            "$SG_USER@$SG_HOST" \
+            "test -d '$SG_PATH'" \
+          || { echo "::error::SITEGROUND_REMOTE_PATH does not exist on the server. Run 'ls -d ~/www/*/public_html/wp-content' over SSH to find the right path."; exit 1; }
+          echo "Remote wp-content path exists."
+
+      - name: Deploy wp-content via rsync
+        run: |
+          rsync -rlvz --no-perms --no-owner --no-group \
+            --exclude-from=.deployignore \
+            -e "ssh -i ~/.ssh/deploy_key -p $SG_PORT -o StrictHostKeyChecking=accept-new -o BatchMode=yes" \
+            wp-content/ \
+            "$SG_USER@$SG_HOST:$SG_PATH/"
+        # NOTE: --delete is intentionally NOT set. This deploy only adds/updates
+        # the files tracked in this repo; it never removes files that exist on
+        # the server. See DEPLOYMENT.md for how to enable exact mirroring per
+        # directory once you're confident in the setup.
+
+      - name: Done
+        run: echo "✅ Deployed wp-content to SiteGround"

@@ -1,0 +1,39 @@
+# --- WordPress core (never version-control it) ---
+/wp-admin/
+/wp-includes/
+/wp-*.php
+/index.php
+/xmlrpc.php
+/license.txt
+/readme.html
+
+# --- Secrets & config ---
+wp-config.php
+.env
+.env.*
+
+# --- User content that lives on the server, not in git ---
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/backups/
+wp-content/wflogs/
+
+# --- Third-party themes/plugins installed and updated via the WP admin ---
+# These must NOT be version-controlled: they auto-update on the server, and
+# Elementor Pro is licence-tied. Only the child theme below is ours.
+wp-content/themes/hello-elementor/
+wp-content/plugins/elementor/
+wp-content/plugins/elementor-pro/
+
+# --- Dependencies / build tooling ---
+node_modules/
+vendor/
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+.idea/
+.vscode/
