@@ -1,0 +1,2 @@
+Optional: must-use plugins (always active, load before normal plugins).
+Files placed directly here deploy to wp-content/mu-plugins/ on SiteGround.

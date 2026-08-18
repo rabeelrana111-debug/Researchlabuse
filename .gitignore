@@ -1,0 +1,32 @@
+# --- WordPress core (never version-control it) ---
+/wp-admin/
+/wp-includes/
+/wp-*.php
+/index.php
+/xmlrpc.php
+/license.txt
+/readme.html
+
+# --- Secrets & config ---
+wp-config.php
+.env
+.env.*
+
+# --- User content that lives on the server, not in git ---
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/backups/
+wp-content/wflogs/
+
+# --- Dependencies / build tooling ---
+node_modules/
+vendor/
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+.idea/
+.vscode/
