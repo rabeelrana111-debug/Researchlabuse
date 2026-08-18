@@ -16,6 +16,9 @@ jobs:
   deploy:
     name: rsync wp-content to SiteGround
     runs-on: ubuntu-latest
+    # Without this a stalled SSH connection would occupy a runner for six
+    # hours (the GitHub default) before being killed.
+    timeout-minutes: 15
 
     # Secrets are passed as env vars rather than inlined into the shell, so odd
     # characters in a value can't break quoting.
@@ -24,6 +27,14 @@ jobs:
       SG_USER: ${{ secrets.SITEGROUND_SSH_USER }}
       SG_PORT: ${{ secrets.SITEGROUND_SSH_PORT }}
       SG_PATH: ${{ secrets.SITEGROUND_REMOTE_PATH }}
+      # Fail fast on an unreachable host instead of waiting out the kernel's
+      # default TCP timeout, and keep long transfers alive.
+      SSH_OPTS: >-
+        -o StrictHostKeyChecking=accept-new
+        -o BatchMode=yes
+        -o ConnectTimeout=20
+        -o ServerAliveInterval=15
+        -o ServerAliveCountMax=4
 
     steps:
       - name: Checkout repository
@@ -97,30 +108,65 @@ jobs:
             sed 's/^/  /' /tmp/scanerr || true
           fi
 
+      # Shared retry helper. SiteGround throttles repeated SSH connections from
+      # the same address, so a deploy can hit a connection timeout even though
+      # the credentials are fine. Retrying with backoff rides that out; an
+      # authentication failure is not retried, since repeating it would only
+      # deepen the throttling.
+      - name: Set up retry helper
+        run: |
+          cat > /tmp/retry.sh <<'SCRIPT'
+          #!/usr/bin/env bash
+          # retry <attempts> <label> -- <command...>
+          attempts="$1"; label="$2"; shift 3
+          delay=15
+          for n in $(seq 1 "$attempts"); do
+            if output=$("$@" 2>&1); then
+              printf '%s\n' "$output"
+              exit 0
+            fi
+            printf '%s\n' "$output" | sed 's/^/  /'
+            if printf '%s' "$output" | grep -qi 'permission denied\|incorrect passphrase\|no such file'; then
+              echo "::error::$label failed for a reason retrying cannot fix."
+              exit 1
+            fi
+            if [ "$n" -lt "$attempts" ]; then
+              echo "$label: attempt $n of $attempts failed, retrying in ${delay}s..."
+              sleep "$delay"
+              delay=$(( delay * 2 ))
+            fi
+          done
+          echo "::error::$label failed after $attempts attempts. If this says 'Connection timed out', SiteGround is refusing connections from the runner — usually its brute-force protection throttling the IP. Wait a few minutes and re-run, and check Site Tools -> Security -> Blocked IPs."
+          exit 1
+          SCRIPT
+          chmod +x /tmp/retry.sh
+
       - name: Verify SSH connection
         run: |
-          ssh -i ~/.ssh/deploy_key -p "$SG_PORT" \
-            -o StrictHostKeyChecking=accept-new \
-            -o BatchMode=yes \
-            "$SG_USER@$SG_HOST" \
-            'echo "SSH OK on $(hostname)"; echo "Home: $(pwd)"'
+          /tmp/retry.sh 4 "SSH connection" -- \
+            ssh -i ~/.ssh/deploy_key -p "$SG_PORT" $SSH_OPTS \
+              "$SG_USER@$SG_HOST" \
+              'echo "SSH OK on $(hostname)"; echo "Home: $(pwd)"'
 
       - name: Confirm the remote path exists
         run: |
-          ssh -i ~/.ssh/deploy_key -p "$SG_PORT" \
-            -o StrictHostKeyChecking=accept-new -o BatchMode=yes \
-            "$SG_USER@$SG_HOST" \
-            "test -d '$SG_PATH'" \
-          || { echo "::error::SITEGROUND_REMOTE_PATH does not exist on the server. Run 'ls -d ~/www/*/public_html/wp-content' over SSH to find the right path."; exit 1; }
+          /tmp/retry.sh 3 "Remote path check" -- \
+            ssh -i ~/.ssh/deploy_key -p "$SG_PORT" $SSH_OPTS \
+              "$SG_USER@$SG_HOST" "test -d '$SG_PATH'" \
+          || { echo "::error::SITEGROUND_REMOTE_PATH may not exist on the server. Run 'ls -d ~/www/*/public_html/wp-content' over SSH to confirm the correct path."; exit 1; }
           echo "Remote wp-content path exists."
 
       - name: Deploy wp-content via rsync
         run: |
-          rsync -rlvz --no-perms --no-owner --no-group \
-            --exclude-from=.deployignore \
-            -e "ssh -i ~/.ssh/deploy_key -p $SG_PORT -o StrictHostKeyChecking=accept-new -o BatchMode=yes" \
-            wp-content/ \
-            "$SG_USER@$SG_HOST:$SG_PATH/"
+          # --partial keeps a part-transferred file so a retry resumes it
+          # rather than starting the transfer from the beginning.
+          /tmp/retry.sh 3 "rsync transfer" -- \
+            rsync -rlz --partial --no-perms --no-owner --no-group \
+              --itemize-changes \
+              --exclude-from=.deployignore \
+              -e "ssh -i ~/.ssh/deploy_key -p $SG_PORT $SSH_OPTS" \
+              wp-content/ \
+              "$SG_USER@$SG_HOST:$SG_PATH/"
         # NOTE: --delete is intentionally NOT set. This deploy only adds/updates
         # the files tracked in this repo; it never removes files that exist on
         # the server. See DEPLOYMENT.md for how to enable exact mirroring per
