@@ -9,6 +9,15 @@ cache/
 upgrade/
 wflogs/
 
+# Third-party theme/plugins managed through the WP admin. Belt-and-braces:
+# they aren't in this repo, so rsync would not send them anyway.
+themes/hello-elementor/
+plugins/elementor/
+plugins/elementor-pro/
+
+# Elementor's generated per-page CSS, rebuilt on the server.
+uploads/elementor/
+
 # Version control / dev tooling that should never reach the server.
 .git/
 .gitignore

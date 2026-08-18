@@ -19,6 +19,13 @@ wp-content/upgrade/
 wp-content/backups/
 wp-content/wflogs/
 
+# --- Third-party themes/plugins installed and updated via the WP admin ---
+# These must NOT be version-controlled: they auto-update on the server, and
+# Elementor Pro is licence-tied. Only the child theme below is ours.
+wp-content/themes/hello-elementor/
+wp-content/plugins/elementor/
+wp-content/plugins/elementor-pro/
+
 # --- Dependencies / build tooling ---
 node_modules/
 vendor/

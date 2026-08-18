@@ -10,13 +10,19 @@ Pushing to the `main` branch automatically deploys the contents of
 ```
 wp-content/
   themes/
-    researchlabusa/    Custom theme (replace the starter with your real theme)
-  plugins/             Custom / version-controlled plugins
-  mu-plugins/          Must-use plugins (optional)
+    hello-elementor-child/   Child theme — your custom CSS and PHP
+  plugins/                   Custom / version-controlled plugins
+  mu-plugins/                Must-use plugins (optional)
 .github/workflows/
-  deploy.yml           Auto-deploy workflow (push to main → SiteGround)
-.deployignore          Files rsync skips when deploying
+  deploy.yml                 Auto-deploy workflow (push to main → SiteGround)
+.deployignore                Files rsync skips when deploying
 ```
+
+The site runs **Hello Elementor + Elementor Pro**. Those are installed and
+updated through the WordPress admin and are deliberately kept out of this repo;
+your customisations go in the child theme. Note that Elementor page designs are
+stored in the database, so they are not moved by this pipeline — see
+[DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Getting started
 

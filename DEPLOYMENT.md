@@ -87,11 +87,11 @@ correct; the rsync step lists every file it transfers.
 ## How it maps
 
 ```
-This repo                          SiteGround server
-─────────────────────────────     ─────────────────────────────────────────────
-wp-content/themes/researchlabusa/  →  <REMOTE_PATH>/themes/researchlabusa/
-wp-content/plugins/<your-plugin>/  →  <REMOTE_PATH>/plugins/<your-plugin>/
-wp-content/mu-plugins/<file>.php   →  <REMOTE_PATH>/mu-plugins/<file>.php
+This repo                                SiteGround server
+───────────────────────────────────     ───────────────────────────────────────
+wp-content/themes/hello-elementor-child/ → <REMOTE_PATH>/themes/hello-elementor-child/
+wp-content/plugins/<your-plugin>/        → <REMOTE_PATH>/plugins/<your-plugin>/
+wp-content/mu-plugins/<file>.php         → <REMOTE_PATH>/mu-plugins/<file>.php
 ```
 
 Anything under `wp-content/uploads/`, `cache/`, etc. is skipped — see
@@ -101,18 +101,36 @@ Anything under `wp-content/uploads/`, `cache/`, etc. is skipped — see
 
 ## What to put in this repo (and what not to)
 
-**Do version-control:** your custom theme(s), your custom plugins, must-use
-plugins — your own code.
+**Do version-control:** your child theme, your own custom plugins, must-use
+plugins — code you wrote.
 
 **Do NOT version-control** (already excluded via `.gitignore`): WordPress core,
-`wp-config.php`, the database, `wp-content/uploads/`, and third-party plugins
-you install through the WP admin (those live on the server and update
-themselves).
+`wp-config.php`, the database, `wp-content/uploads/`, and third-party themes
+and plugins installed through the WP admin — including **Hello Elementor**,
+**Elementor**, and **Elementor Pro**. Those live on the server, update
+themselves, and Elementor Pro is licence-tied.
 
-If your live site already uses a theme with a **different name**, either rename
-this `wp-content/themes/researchlabusa/` folder to match it, or delete this
-starter folder and add your real theme folder instead. The workflow deploys
-whatever theme/plugin folders exist under `wp-content/`.
+## The Elementor setup on this site
+
+`researchlabusa.com` runs the **Hello Elementor** theme with **Elementor Pro**.
+This repo therefore holds a child theme — `wp-content/themes/hello-elementor-child/`
+— which is where your custom CSS and PHP belong. Editing Hello Elementor
+directly is unsafe: its files are overwritten on every theme update.
+
+### Important: Elementor designs live in the database, not in files
+
+Pages you build in the Elementor editor, along with its global site settings,
+are stored in the WordPress **database**. This deploy pipeline moves **files
+only**, so:
+
+- Pushing to `main` will **not** transfer Elementor page designs between sites.
+- Editing pages in Elementor on the live site is safe — a deploy never
+  overwrites that work.
+- To move Elementor designs between environments, use Elementor's own
+  **Tools → Import / Export Kit**, or a database migration tool.
+
+What this pipeline *is* for: version-controlled CSS, PHP, custom plugins, and
+anything else that is genuinely a file.
 
 ---
 
@@ -126,9 +144,9 @@ to that folder and add `--delete`, for example:
 
 ```yaml
 rsync -rlvz --delete --no-perms --no-owner --no-group \
-  -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SITEGROUND_SSH_PORT }}" \
-  wp-content/themes/researchlabusa/ \
-  "${{ secrets.SITEGROUND_SSH_USER }}@${{ secrets.SITEGROUND_SSH_HOST }}:${{ secrets.SITEGROUND_REMOTE_PATH }}/themes/researchlabusa/"
+  -e "ssh -i ~/.ssh/deploy_key -p $SG_PORT -o StrictHostKeyChecking=accept-new" \
+  wp-content/themes/hello-elementor-child/ \
+  "$SG_USER@$SG_HOST:$SG_PATH/themes/hello-elementor-child/"
 ```
 
 Scope `--delete` to a single theme/plugin folder — never the whole
