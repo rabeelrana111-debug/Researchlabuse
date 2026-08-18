@@ -14,19 +14,38 @@ database, uploads, WordPress core, and admin-installed plugins are untouched.
 
 You do this once. After that, every `git push` to `main` deploys automatically.
 
-### Step 1 — Turn on SSH access in SiteGround
+### Step 1 — Create a passphrase-free key and register it with SiteGround
 
-1. Log in to SiteGround and open **Site Tools** for `researchlabusa.com`.
-2. Go to **Devs → SSH Keys Manager**.
-3. Under **Generate New Key**, enter a name (e.g. `github-deploy`), leave the
-   passphrase empty (CI can't type a passphrase), and click **Create**.
-4. In the key list, use **Actions → Private Key** to reveal and **copy the full
-   private key** (from `-----BEGIN ... -----` to `-----END ... -----`). Keep it
-   handy for Step 3.
-   - *Alternative:* if you'd rather generate the key yourself, run
-     `ssh-keygen -t ed25519 -f siteground_deploy -N ""` locally and paste the
-     **public** key (`siteground_deploy.pub`) into SiteGround's *Import Key* box.
-     You'll then use the private key you generated in Step 3.
+> **Important:** SiteGround's own key generator *requires* a passphrase, and
+> GitHub Actions cannot type a passphrase — a passphrase-protected key fails
+> with `incorrect passphrase supplied to decrypt private key`. So generate the
+> key locally without one and import its public half into SiteGround.
+
+1. On your computer, generate a key pair with an empty passphrase (`-N ""`):
+   ```
+   ssh-keygen -t ed25519 -f %USERPROFILE%\.ssh\siteground_deploy -N ""
+   ```
+   (macOS/Linux: `ssh-keygen -t ed25519 -f ~/.ssh/siteground_deploy -N ""`)
+
+   This writes two files: `siteground_deploy` (**private**) and
+   `siteground_deploy.pub` (**public**).
+
+2. Print the **public** key and copy the whole line:
+   ```
+   type %USERPROFILE%\.ssh\siteground_deploy.pub
+   ```
+
+3. In SiteGround: **Site Tools → Devs → SSH Keys Manager → Import** (or *Add
+   existing key*) → paste the **public** key → save.
+
+4. Keep the **private** key (`siteground_deploy`, no `.pub`) for Step 3 — it
+   goes into the GitHub secret, and nowhere else.
+
+> **Already generated a key in SiteGround?** You don't have to start over —
+> just strip the passphrase off it. Save the private key to a file, then run
+> `ssh-keygen -p -f <keyfile> -N ""` and enter the existing passphrase when
+> prompted. The public key stays the same, so it remains registered in
+> SiteGround; only the private key file changes.
 
 ### Step 2 — Collect your SSH connection details
 
@@ -119,9 +138,20 @@ Scope `--delete` to a single theme/plugin folder — never the whole
 
 ## Troubleshooting
 
+The workflow diagnoses the common setup mistakes itself and names them in the
+Actions log. The three you're most likely to hit:
+
+- **`The private key is passphrase-protected`** — SiteGround generated the key
+  and forced a passphrase on it. Strip it with `ssh-keygen -p -f <keyfile> -N ""`
+  (see the note in Step 1), then update the secret.
+- **`SITEGROUND_SSH_KEY contains a PUBLIC key`** — the halves are swapped. The
+  private key (the multi-line `-----BEGIN OPENSSH PRIVATE KEY-----` block) goes
+  in the GitHub secret; the public key (`ssh-ed25519 AAAA...`) goes in SiteGround.
 - **`Permission denied (publickey)`** — the private key in `SITEGROUND_SSH_KEY`
   doesn't match a key registered in SiteGround, or the user/host is wrong.
-  Re-copy the full key including the BEGIN/END lines.
+  Re-copy the full key including the BEGIN/END lines. The workflow prints the
+  public half of whatever key it loaded — compare that line against the key
+  listed in SiteGround's SSH Keys Manager.
 - **Connection times out** — check `SITEGROUND_SSH_PORT` (usually `18765`, not
   `22`) and that SSH is enabled in Site Tools.
 - **Files deploy but the site doesn't change** — confirm `SITEGROUND_REMOTE_PATH`
