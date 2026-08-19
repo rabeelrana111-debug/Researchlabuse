@@ -1,0 +1,69 @@
+# ===========================================================================
+# Apache configuration for researchlabusa.com (SiteGround)
+# ---------------------------------------------------------------------------
+# Copied to the web root on deploy. Everything here is optional tuning — the
+# site works without it, so if something misbehaves, comment a block out
+# rather than debugging blind.
+# ===========================================================================
+
+ErrorDocument 404 /404.html
+
+# --- Compression -----------------------------------------------------------
+# Text assets compress by roughly 70%, the biggest single win for page weight.
+<IfModule mod_deflate.c>
+	AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+	AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+	AddOutputFilterByType DEFLATE application/json application/xml
+	AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# --- Caching ---------------------------------------------------------------
+# Images are replaced in place, keeping the same filename — so a long cache
+# would leave visitors looking at the previous picture for weeks. One day
+# bounds that while still avoiding a re-download on every page view.
+#
+# If you ever adopt fingerprinted filenames (image.a1b2c3.jpg), raise the
+# image lifetime to a year; the new name defeats the cache by itself.
+#
+# HTML must stay uncached or visitors keep seeing the previous version of a
+# page after a deploy.
+<IfModule mod_expires.c>
+	ExpiresActive On
+
+	ExpiresByType text/html              "access plus 0 seconds"
+	ExpiresByType application/xml        "access plus 0 seconds"
+
+	ExpiresByType text/css               "access plus 7 days"
+	ExpiresByType application/javascript "access plus 7 days"
+
+	ExpiresByType image/jpeg             "access plus 1 day"
+	ExpiresByType image/png              "access plus 1 day"
+	ExpiresByType image/webp             "access plus 1 day"
+	ExpiresByType image/svg+xml          "access plus 7 days"
+	ExpiresByType font/woff2             "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+	# Revalidate HTML on every request rather than serving it from cache.
+	<FilesMatch "\.html$">
+		Header set Cache-Control "no-cache, must-revalidate"
+	</FilesMatch>
+
+	# Stop browsers guessing a file's type from its contents.
+	Header always set X-Content-Type-Options "nosniff"
+	# Don't leak full URLs to other sites in the Referer header.
+	Header always set Referrer-Policy "strict-origin-when-cross-origin"
+	# A static site has no need for these device APIs.
+	Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
+# --- HTTPS redirect --------------------------------------------------------
+# SiteGround normally handles this in Site Tools (Security -> HTTPS Enforce).
+# Only uncomment if HTTP requests are not being redirected, and remove it
+# again if you get a redirect loop.
+#
+# <IfModule mod_rewrite.c>
+# 	RewriteEngine On
+# 	RewriteCond %{HTTPS} !=on
+# 	RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
