@@ -8,12 +8,35 @@
 
 ErrorDocument 404 /404.html
 
-# The contact page moved to .php so it can handle its own form submission.
-# It was live at the old address, so redirect rather than 404 anyone holding
-# a link to it.
+# --- Clean URLs ------------------------------------------------------------
+# Every page is a directory index, so /about/ resolves to about/index.html and
+# /contact/ to contact/index.php with no rewriting at all. Listing index.php
+# here is what makes the contact page work: it is the one page without an
+# index.html beside it.
+DirectoryIndex index.html index.php
+
+# The rules below only redirect the older extension URLs, which were live and
+# may be linked or indexed. Routing does not depend on them: if mod_rewrite
+# were unavailable the site still serves correctly, and only old links 404.
 <IfModule mod_rewrite.c>
 	RewriteEngine On
-	RewriteRule ^contact\.html$ /contact.php [R=301,L]
+
+	# /index.html -> /
+	RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+	RewriteRule ^ / [R=301,L]
+
+	# /about.html -> /about/   (POST is excluded: a 301 would turn a form
+	# submission into a GET and silently discard it. 404.html is excluded
+	# because there is no /404/ directory to redirect it to.)
+	RewriteCond %{REQUEST_METHOD} !=POST
+	RewriteCond %{THE_REQUEST} !\s/+404\.html[\s?] [NC]
+	RewriteCond %{THE_REQUEST} \s/+(.+?)\.html[\s?] [NC]
+	RewriteRule ^ /%1/ [R=301,L,NE]
+
+	# /contact.php -> /contact/
+	RewriteCond %{REQUEST_METHOD} !=POST
+	RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
+	RewriteRule ^ /%1/ [R=301,L,NE]
 </IfModule>
 
 # --- Compression -----------------------------------------------------------
