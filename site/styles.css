@@ -727,3 +727,77 @@ ul, ol { margin: 0; padding: 0; }
 .totop:hover { background: var(--accent); color: #fff; }
 
 @media (max-width: 700px) { .totop { display: none; } }
+
+/* ---------------------------------------------------------------------------
+   Interior pages
+   ---------------------------------------------------------------------------
+   Used by the about, contact, guides and topic pages.
+   ------------------------------------------------------------------------ */
+
+.lede {
+	font-size: var(--t-lg);
+	color: var(--muted);
+	max-width: var(--measure);
+}
+
+/* Text beside a supporting image. Collapses to one column on narrow screens
+   without a media query, because the minmax floor exceeds half the track. */
+.two-col {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+	gap: var(--s-12);
+	align-items: start;
+}
+
+.figure {
+	border-radius: var(--r-lg);
+	overflow: hidden;
+	box-shadow: var(--shadow);
+}
+
+.figure img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* Plain content card, distinct from the article cards on the homepage. */
+.card {
+	background: var(--white);
+	border: 1px solid var(--line);
+	border-radius: var(--r-lg);
+	padding: var(--s-6);
+	box-shadow: var(--shadow-sm);
+}
+
+.card h3 {
+	font-size: var(--t-lg);
+	margin-bottom: var(--s-2);
+}
+
+/* Long-form body copy. Headings need more space above than below so each
+   section reads as attached to its own heading. */
+.prose > * + * { margin-top: var(--s-4); }
+
+.prose h2 {
+	font-size: var(--t-2xl);
+	margin-top: var(--s-10);
+	margin-bottom: var(--s-3);
+}
+
+.prose h2:first-child { margin-top: 0; }
+
+.prose ul {
+	padding-left: 1.3em;
+	list-style: disc;
+}
+
+.prose li + li { margin-top: var(--s-2); }
+
+.measure { max-width: var(--measure); }
+.mt-8 { margin-top: var(--s-8); }
+.mb-0 { margin-bottom: 0; }
+
+/* On interior pages the heading block is the whole section, so its trailing
+   margin — meant to separate it from following content — just adds a gap. */
+.section > .wrap > .sectionhead:only-child { margin-bottom: 0; }
