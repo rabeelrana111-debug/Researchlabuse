@@ -1,0 +1,46 @@
+---
+import { getCollection, render } from 'astro:content';
+import PostLayout from '../../layouts/PostLayout.astro';
+
+// Generates one static page per markdown file in src/content/blog/.
+export async function getStaticPaths() {
+	const posts = await getCollection('blog', ({ data }) =>
+		// Drafts are visible while developing, hidden in the built site.
+		import.meta.env.PROD ? data.draft !== true : true
+	);
+
+	// Newest first, so "previous" and "next" follow reading order.
+	const sorted = posts.sort(
+		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+	);
+
+	return sorted.map((post, index) => ({
+		params: { slug: post.id },
+		props: {
+			post,
+			// index 0 is the newest post, so the *next* item in the array is older.
+			newer: index > 0 ? sorted[index - 1] : undefined,
+			older: index < sorted.length - 1 ? sorted[index + 1] : undefined,
+		},
+	}));
+}
+
+const { post, newer, older } = Astro.props;
+const { Content } = await render(post);
+
+const toLink = (entry) =>
+	entry ? { url: `/blog/${entry.id}/`, title: entry.data.title } : undefined;
+---
+
+<PostLayout
+	title={post.data.title}
+	description={post.data.description}
+	pubDate={post.data.pubDate}
+	updatedDate={post.data.updatedDate}
+	author={post.data.author}
+	tags={post.data.tags}
+	prev={toLink(older)}
+	next={toLink(newer)}
+>
+	<Content />
+</PostLayout>

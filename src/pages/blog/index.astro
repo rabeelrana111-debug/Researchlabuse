@@ -1,0 +1,45 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+
+const posts = (
+	await getCollection('blog', ({ data }) =>
+		import.meta.env.PROD ? data.draft !== true : true
+	)
+).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout
+	title="Blog"
+	description="Articles, guides and updates from the Research Lab USA team."
+>
+	<section class="rl-section rl-section--tight">
+		<div class="rl-container">
+			<div class="rl-section-head">
+				<p class="rl-eyebrow">Writing</p>
+				<h1>Blog</h1>
+				<p class="rl-lede">
+					Notes, guides and updates from the team. New articles are published
+					regularly — subscribe by <a href="/rss.xml">RSS</a> to follow along.
+				</p>
+			</div>
+
+			{posts.length === 0 ? (
+				<p>No articles have been published yet. Check back soon.</p>
+			) : (
+				<div class="rl-grid rl-grid--posts">
+					{posts.map((post) => (
+						<PostCard
+							url={`/blog/${post.id}/`}
+							title={post.data.title}
+							description={post.data.description}
+							pubDate={post.data.pubDate}
+							tags={post.data.tags}
+						/>
+					))}
+				</div>
+			)}
+		</div>
+	</section>
+</BaseLayout>

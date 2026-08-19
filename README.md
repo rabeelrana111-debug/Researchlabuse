@@ -1,33 +1,45 @@
 # Research Lab USA
 
-WordPress custom code for **https://researchlabusa.com/**, hosted on SiteGround.
+Static website for **https://researchlabusa.com**, built with
+[Astro](https://astro.build) and deployed automatically to SiteGround.
 
-Pushing to the `main` branch automatically deploys the contents of
-`wp-content/` to the SiteGround server via GitHub Actions (rsync over SSH).
+Blog posts are markdown files. Push to `main` and the site rebuilds and
+publishes itself in about a minute — no database, no admin login, nothing on
+the server to keep patched.
 
-## Repository layout
+## Quick start
 
-```
-wp-content/
-  themes/
-    hello-elementor-child/   Child theme — your custom CSS and PHP
-  plugins/                   Custom / version-controlled plugins
-  mu-plugins/                Must-use plugins (optional)
-.github/workflows/
-  deploy.yml                 Auto-deploy workflow (push to main → SiteGround)
-.deployignore                Files rsync skips when deploying
+```bash
+npm install
+npm run dev      # http://localhost:4321
 ```
 
-The site runs **Hello Elementor + Elementor Pro**. Those are installed and
-updated through the WordPress admin and are deliberately kept out of this repo;
-your customisations go in the child theme. Note that Elementor page designs are
-stored in the database, so they are not moved by this pipeline — see
-[DEPLOYMENT.md](./DEPLOYMENT.md).
+## Layout
 
-## Getting started
+```
+src/
+  content/blog/      Blog posts (markdown) — one file per article
+  pages/             Routes: index, about, contact, blog, 404
+  layouts/           Page shell and article template
+  components/        Header, footer, post card, meta tags
+  styles/global.css  Design system — all colours and spacing live here
+public/              Files copied as-is: favicon, robots.txt, .htaccess
+.github/workflows/   Build and deploy pipeline
+```
 
-The deploy pipeline needs a one-time setup (SiteGround SSH key + five GitHub
-secrets). Full instructions are in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+## Publishing an article
 
-Only your own code lives here — WordPress core, `wp-config.php`, the database,
-and `wp-content/uploads/` stay on the server and are excluded from git.
+Add a markdown file to `src/content/blog/` with front matter, then push:
+
+```markdown
+---
+title: "Article title"
+description: "Shown on cards and in search results."
+pubDate: 2026-08-19
+tags: ["guides"]
+---
+```
+
+The file name becomes the URL. Full instructions, design tokens, and the
+contact-form setup are in **[docs/SITE-GUIDE.md](./docs/SITE-GUIDE.md)**;
+hosting and deployment details are in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.

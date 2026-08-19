@@ -1,0 +1,62 @@
+# ===========================================================================
+# Apache configuration for researchlabusa.com (SiteGround)
+# ---------------------------------------------------------------------------
+# This file is copied to the web root on deploy. Everything here is optional
+# tuning — the site works without it, so if something misbehaves you can
+# comment a block out rather than debugging blind.
+# ===========================================================================
+
+# --- Custom error page -----------------------------------------------------
+ErrorDocument 404 /404.html
+
+# --- Compression -----------------------------------------------------------
+# Text assets compress by roughly 70%, which is the single biggest win for
+# page weight on a static site.
+<IfModule mod_deflate.c>
+	AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+	AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+	AddOutputFilterByType DEFLATE application/json application/xml
+	AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# --- Caching ---------------------------------------------------------------
+# Astro fingerprints its CSS and JS filenames, so those can be cached hard:
+# a change produces a new filename rather than a stale file. HTML must stay
+# short-lived or visitors would keep seeing the previous version of a page.
+<IfModule mod_expires.c>
+	ExpiresActive On
+
+	ExpiresByType text/html                 "access plus 0 seconds"
+	ExpiresByType application/xml           "access plus 0 seconds"
+	ExpiresByType application/rss+xml       "access plus 1 hour"
+
+	ExpiresByType text/css                  "access plus 1 year"
+	ExpiresByType application/javascript    "access plus 1 year"
+	ExpiresByType image/svg+xml             "access plus 1 month"
+	ExpiresByType image/webp                "access plus 1 month"
+	ExpiresByType image/avif                "access plus 1 month"
+	ExpiresByType image/jpeg                "access plus 1 month"
+	ExpiresByType image/png                 "access plus 1 month"
+	ExpiresByType font/woff2                "access plus 1 year"
+</IfModule>
+
+# --- Security headers ------------------------------------------------------
+<IfModule mod_headers.c>
+	# Stop browsers guessing a file's type from its contents.
+	Header always set X-Content-Type-Options "nosniff"
+	# Don't leak full URLs to other sites in the Referer header.
+	Header always set Referrer-Policy "strict-origin-when-cross-origin"
+	# This is a static site with no need for these device APIs.
+	Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
+# --- HTTPS redirect --------------------------------------------------------
+# SiteGround normally handles this in Site Tools (Security -> HTTPS Enforce).
+# Only uncomment if you find HTTP requests are not being redirected, and
+# remove it again if you get a redirect loop.
+#
+# <IfModule mod_rewrite.c>
+# 	RewriteEngine On
+# 	RewriteCond %{HTTPS} !=on
+# 	RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>

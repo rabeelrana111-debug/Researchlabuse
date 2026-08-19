@@ -1,0 +1,117 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+
+const recentPosts = (
+	await getCollection('blog', ({ data }) =>
+		import.meta.env.PROD ? data.draft !== true : true
+	)
+)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.slice(0, 3);
+---
+
+<BaseLayout
+	title="Research Lab USA"
+	description="Research Lab USA publishes practical articles, guides and laboratory notes for researchers and technical readers."
+>
+	<!-- Hero -->
+	<section class="rl-section">
+		<div class="rl-container">
+			<div class="rl-measure">
+				<p class="rl-eyebrow">Research Lab USA</p>
+				<h1>Clear, careful writing from the laboratory bench</h1>
+				<p class="rl-lede">
+					We publish practical articles, methods notes and explainers for
+					researchers and technically minded readers — written plainly, with
+					the reasoning left in.
+				</p>
+				<div class="rl-btn-row rl-mt-8">
+					<a class="rl-btn rl-btn--primary" href="/blog/">Read the blog</a>
+					<a class="rl-btn rl-btn--secondary" href="/about/">About us</a>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- What we cover -->
+	<section class="rl-section rl-section--alt">
+		<div class="rl-container">
+			<div class="rl-section-head">
+				<p class="rl-eyebrow">What we cover</p>
+				<h2>Written for people who check the details</h2>
+			</div>
+			<div class="rl-grid rl-grid--features">
+				<article class="rl-card">
+					<div class="rl-feature__icon" aria-hidden="true">01</div>
+					<h3 class="rl-card__title">Methods and protocols</h3>
+					<p class="rl-mb-0">
+						Step-by-step write-ups of procedures we actually use, including the
+						parts that usually get left out.
+					</p>
+				</article>
+				<article class="rl-card">
+					<div class="rl-feature__icon" aria-hidden="true">02</div>
+					<h3 class="rl-card__title">Explainers</h3>
+					<p class="rl-mb-0">
+						Background pieces that assume curiosity rather than prior
+						expertise, with sources cited so you can go deeper.
+					</p>
+				</article>
+				<article class="rl-card">
+					<div class="rl-feature__icon" aria-hidden="true">03</div>
+					<h3 class="rl-card__title">Laboratory notes</h3>
+					<p class="rl-mb-0">
+						Shorter observations from ongoing work — what we tried, what
+						happened, and what we would do differently.
+					</p>
+				</article>
+			</div>
+		</div>
+	</section>
+
+	<!-- Recent posts -->
+	<section class="rl-section">
+		<div class="rl-container">
+			<div class="rl-section-head">
+				<p class="rl-eyebrow">Latest</p>
+				<h2>Recent articles</h2>
+			</div>
+
+			{recentPosts.length === 0 ? (
+				<p>No articles have been published yet. Check back soon.</p>
+			) : (
+				<div class="rl-grid rl-grid--posts">
+					{recentPosts.map((post) => (
+						<PostCard
+							url={`/blog/${post.id}/`}
+							title={post.data.title}
+							description={post.data.description}
+							pubDate={post.data.pubDate}
+							tags={post.data.tags}
+						/>
+					))}
+				</div>
+			)}
+
+			<div class="rl-mt-8">
+				<a class="rl-btn rl-btn--secondary" href="/blog/">View all articles</a>
+			</div>
+		</div>
+	</section>
+
+	<!-- Closing CTA -->
+	<section class="rl-section rl-section--dark">
+		<div class="rl-container rl-measure">
+			<h2>Follow new articles</h2>
+			<p>
+				Every new piece is published to our RSS feed the moment it goes live —
+				no newsletter signup, no tracking.
+			</p>
+			<div class="rl-btn-row rl-mt-6">
+				<a class="rl-btn rl-btn--primary" href="/rss.xml">Subscribe by RSS</a>
+			</div>
+		</div>
+	</section>
+</BaseLayout>

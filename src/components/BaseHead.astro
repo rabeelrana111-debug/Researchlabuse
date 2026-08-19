@@ -1,0 +1,77 @@
+---
+/**
+ * Everything that belongs in <head>: meta tags, canonical URL, social cards.
+ * Rendered once per page via BaseLayout.
+ */
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+	description: string;
+	/** Path to an image for social previews, relative to the site root. */
+	image?: string;
+	/** Set on article pages so social cards use the article type. */
+	article?: boolean;
+	publishedDate?: Date;
+}
+
+const {
+	title,
+	description,
+	image = '/social-card.svg',
+	article = false,
+	publishedDate,
+} = Astro.props;
+
+const SITE_NAME = 'Research Lab USA';
+
+// Astro.site comes from astro.config.mjs. Falling back to Astro.url keeps
+// `astro dev` working if the config is ever missing a site value.
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
+const socialImageURL = new URL(image, Astro.site ?? Astro.url);
+
+// Home page shows the brand alone rather than "Home | Research Lab USA".
+const pageTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="generator" content={Astro.generator} />
+
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalURL} />
+
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+<link
+	rel="alternate"
+	type="application/rss+xml"
+	title={`${SITE_NAME} — Blog`}
+	href={new URL('rss.xml', Astro.site ?? Astro.url)}
+/>
+
+<!-- Open Graph -->
+<meta property="og:type" content={article ? 'article' : 'website'} />
+<meta property="og:site_name" content={SITE_NAME} />
+<meta property="og:title" content={pageTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:image" content={socialImageURL} />
+{publishedDate && (
+	<meta property="article:published_time" content={publishedDate.toISOString()} />
+)}
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={socialImageURL} />
+
+<!-- Inter, with a full system fallback in global.css if it fails to load -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+	href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+	rel="stylesheet"
+/>
