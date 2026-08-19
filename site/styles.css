@@ -7,29 +7,42 @@
 
 :root {
 	/* --- Palette ---------------------------------------------------------
-	   Clinical blue and white, with a single teal accent used sparingly for
-	   calls to action. Swap --brand / --accent to change the whole site. */
-	--navy-900: #06274A;   /* dark bands, footer, utility bar */
-	--navy-800: #0A3A6C;
-	--brand:    #0B4A87;   /* primary — buttons, links, headings accent */
-	--brand-600:#1263AF;
-	--brand-500:#2E7DD1;
-	--brand-100:#DCEAF8;
-	--brand-50: #F1F7FD;
+	   Navy, green and red. Navy carries the structure, green marks actions,
+	   and red is reserved for warnings and the compliance notice.
 
-	--accent:      #10937A;   /* teal — CTA buttons, eyebrow marks */
-	--accent-600:  #0C7A65;
-	--accent-300:  #37C3A6;
+	   Red and green are never used as the only difference between two
+	   states — around 8% of men cannot reliably tell them apart, so each
+	   also differs by text, icon or position. Every pairing below meets
+	   WCAG AA for its text size. */
 
-	--ink:     #0F172A;
-	--body:    #45566B;
-	--muted:   #6B7C93;
-	--line:    #E2E8F0;
+	/* Navy — structure, headers, dark bands, footer */
+	--navy-900: #0A2342;
+	--navy-800: #10345F;
+	--brand:    #16467E;   /* links and secondary buttons on white */
+	--brand-600:#1D5595;
+	--brand-500:#2E6FB5;   /* focus rings */
+	--brand-100:#D8E4F2;
+	--brand-50: #F1F6FC;
+
+	/* Green — calls to action and active states */
+	--accent:     #0B7A44;   /* 5.4:1 on white, safe for button text */
+	--accent-600: #096237;   /* hover */
+	--accent-300: #35C77A;   /* on navy only — 7.2:1 */
+	--accent-lg:  #0E8F4F;   /* large text and decoration only, 4.2:1 */
+
+	/* Red — warnings and the research-use-only notice */
+	--danger:     #B3261E;   /* 6.5:1 on white */
+	--danger-300: #FF6B5E;   /* on navy only — 5.6:1 */
+
+	--ink:     #0A2342;
+	--body:    #44546A;
+	--muted:   #65758C;
+	--line:    #E1E7EF;
 	--white:   #FFFFFF;
-	--surface-alt: #F5F8FC;
+	--surface-alt: #F4F7FB;
 
-	--on-dark:      #C3D5E8;
-	--on-dark-soft: #8FA9C4;
+	--on-dark:      #C6D6E8;
+	--on-dark-soft: #93A9C2;
 
 	/* --- Type ----------------------------------------------------------- */
 	--font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -636,12 +649,12 @@ ul, ol { margin: 0; padding: 0; }
 	margin: 0 auto;
 	padding: var(--s-5) var(--s-6);
 	border: 1px solid var(--line);
-	border-left: 4px solid var(--brand);
+	border-left: 4px solid var(--danger);
 	border-radius: var(--r);
 	background: var(--surface-alt);
 	font-size: var(--t-sm);
 }
-.notice strong { color: var(--ink); }
+.notice strong { color: var(--danger); }
 
 /* ---------------------------------------------------------------------------
    Footer
