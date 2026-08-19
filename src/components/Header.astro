@@ -5,8 +5,10 @@
  */
 const links = [
 	{ href: '/', label: 'Home' },
+	{ href: '/products/', label: 'Catalogue' },
 	{ href: '/blog/', label: 'Blog' },
 	{ href: '/about/', label: 'About' },
+	{ href: '/faq/', label: 'FAQ' },
 	{ href: '/contact/', label: 'Contact' },
 ];
 
@@ -16,6 +18,9 @@ const path = Astro.url.pathname.replace(/\/?$/, '/');
 const isActive = (href: string) =>
 	href === '/' ? path === '/' : path.startsWith(href);
 ---
+<p class="rl-compliance-bar">
+	For laboratory and research use only. Not for human or veterinary consumption.
+</p>
 <header class="rl-header">
 	<div class="rl-container rl-header__inner">
 		<a class="rl-logo" href="/">

@@ -1,0 +1,65 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const faqs = [
+	{
+		q: 'What does "for research use only" mean?',
+		a: 'These materials are supplied for in-vitro and non-human laboratory research by qualified professionals. They are not approved for human or veterinary use, and we cannot provide guidance on any such use.',
+	},
+	{
+		q: 'How do I check a certificate of analysis?',
+		a: 'Every product page links to the certificate for the batch currently in stock. Match the batch number on the certificate to the number printed on your label. If they do not match, contact us and we will resolve it.',
+	},
+	{
+		q: 'What does your testing actually cover?',
+		a: 'A sample from each batch is sent to an independent analytical laboratory, which runs HPLC analysis to confirm identity and quantify purity, then issues a signed certificate. Batches that do not meet specification are withheld from sale.',
+	},
+	{
+		q: 'How quickly do orders ship?',
+		a: 'Orders confirmed before [3 PM EST] on a business day are dispatched the same day. Tracking is sent as soon as the shipping label is created.',
+	},
+	{
+		q: 'Do you ship internationally?',
+		a: '[Answer honestly for your operation. Import rules for research materials vary significantly by country, and the recipient is responsible for compliance in their own jurisdiction.]',
+	},
+	{
+		q: 'How should these materials be stored?',
+		a: 'Storage conditions are listed in the specification table on each product page. Follow the conditions stated there to keep the material at its tested specification.',
+	},
+	{
+		q: 'What if my order arrives damaged or incorrect?',
+		a: 'Contact us within [7] days with your order number and photographs. If we sent the wrong item, or it was damaged in transit, we will replace or refund it.',
+	},
+	{
+		q: 'Can I buy these for personal use?',
+		a: 'No. These materials are sold only for legitimate laboratory research and must not be consumed by humans or animals. Orders that indicate intended personal use will be cancelled.',
+	},
+];
+---
+
+<BaseLayout
+	title="Frequently asked questions"
+	description="Common questions about testing, certificates of analysis, shipping and terms of sale."
+>
+	<section class="rl-section rl-section--tight">
+		<div class="rl-container">
+			<div class="rl-section-head">
+				<p class="rl-eyebrow">Support</p>
+				<h1>Frequently asked questions</h1>
+				<p class="rl-lede">
+					If your question is not answered here, the
+					<a href="/contact/">contact page</a> reaches someone who can help.
+				</p>
+			</div>
+
+			<div class="rl-faq">
+				{faqs.map((faq) => (
+					<details class="rl-faq__item">
+						<summary class="rl-faq__q">{faq.q}</summary>
+						<div class="rl-faq__a">{faq.a}</div>
+					</details>
+				))}
+			</div>
+		</div>
+	</section>
+</BaseLayout>
