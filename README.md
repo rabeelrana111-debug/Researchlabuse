@@ -1,45 +1,48 @@
 # Research Lab USA
 
-Static website for **https://researchlabusa.com**, built with
-[Astro](https://astro.build) and deployed automatically to SiteGround.
+Website for **https://researchlabusa.com**, hosted on SiteGround.
 
-Blog posts are markdown files. Push to `main` and the site rebuilds and
-publishes itself in about a minute — no database, no admin login, nothing on
-the server to keep patched.
+Pushing to `main` publishes the site automatically. Nothing else is required —
+no build step, no framework, no server-side code.
 
-## Quick start
+## How it works
+
+Put your files in **`site/`**. Whatever is in there is published to the web
+root exactly as-is:
+
+```
+site/index.html   ->  https://researchlabusa.com/
+site/about.html   ->  https://researchlabusa.com/about.html
+site/styles.css   ->  https://researchlabusa.com/styles.css
+```
+
+Edit, commit, push. It is live in under a minute.
+
+`site/index.html` currently holds a placeholder — replace it and start
+building.
+
+## Preview locally
+
+Open `site/index.html` in a browser, or serve the folder so root-relative
+paths behave exactly as they will in production:
 
 ```bash
-npm install
-npm run dev      # http://localhost:4321
+python3 -m http.server -d site 8000   # then open http://localhost:8000
 ```
 
-## Layout
+## Adding a build tool later
 
-```
-src/
-  content/blog/      Blog posts (markdown) — one file per article
-  pages/             Routes: index, about, contact, blog, 404
-  layouts/           Page shell and article template
-  components/        Header, footer, post card, meta tags
-  styles/global.css  Design system — all colours and spacing live here
-public/              Files copied as-is: favicon, robots.txt, .htaccess
-.github/workflows/   Build and deploy pipeline
-```
+The pipeline handles both shapes without any edits:
 
-## Publishing an article
+| Repo state | What gets published |
+|---|---|
+| No `package.json` | `site/` as-is |
+| `package.json` present | runs `npm ci && npm run build`, publishes `dist/` |
 
-Add a markdown file to `src/content/blog/` with front matter, then push:
+So if you later adopt a framework, add it in the normal way and the deploy
+switches over on its own.
 
-```markdown
----
-title: "Article title"
-description: "Shown on cards and in search results."
-pubDate: 2026-08-19
-tags: ["guides"]
----
-```
+## Deployment
 
-The file name becomes the URL. Full instructions, design tokens, and the
-contact-form setup are in **[docs/SITE-GUIDE.md](./docs/SITE-GUIDE.md)**;
-hosting and deployment details are in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+Credentials, the required GitHub secrets, and troubleshooting are documented in
+**[DEPLOYMENT.md](./DEPLOYMENT.md)**.

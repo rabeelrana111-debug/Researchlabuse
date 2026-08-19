@@ -1,8 +1,12 @@
 # Deploying to SiteGround
 
-Every push to `main` builds the Astro site and copies the generated HTML to
-SiteGround. You can also run it on demand from the repository's **Actions** tab
-(*Deploy to SiteGround* → **Run workflow**).
+Every push to `main` publishes the site to SiteGround. You can also run it on
+demand from the repository's **Actions** tab (*Deploy to SiteGround* → **Run
+workflow**).
+
+By default the contents of `site/` are published as-is. If a `package.json`
+appears in the repo, the workflow switches to running `npm ci && npm run build`
+and publishes `dist/` instead — no changes needed to make that switch.
 
 ---
 
@@ -61,14 +65,15 @@ To remove a passphrase from a key you already have:
 
 ## What the pipeline does
 
-1. Installs dependencies with `npm ci`
-2. Builds the site with `npm run build` into `dist/`
-3. Refuses to continue if `dist/index.html` is missing, so a broken build
-   cannot blank the live site
-4. Validates the secrets and the SSH key, naming the specific problem if one is
+1. Works out how the site is built — publishing `site/` as-is when there is no
+   `package.json`, or running `npm ci && npm run build` and publishing `dist/`
+   when there is
+2. Refuses to continue if the directory to publish is missing or has no
+   `index.html`, so a broken build cannot blank the live site
+3. Validates the secrets and the SSH key, naming the specific problem if one is
    wrong
-5. Connects to SiteGround, retrying with backoff on transient failures
-6. Copies `dist/` to the web root with rsync
+4. Connects to SiteGround, retrying with backoff on transient failures
+5. Copies the files to the web root with rsync
 
 A failed build never touches the server — the previous version stays live.
 
@@ -79,8 +84,8 @@ from the repo therefore stays reachable on the server.
 
 To make the server mirror the repo exactly, set `DELETE_STALE: "true"` in
 `.github/workflows/deploy.yml`. Check first that nothing else lives in your web
-root, since anything not produced by the build will be removed. `.well-known`
-is always protected, as deleting it can break SSL certificate renewal.
+root, since anything not being published will be removed. `.well-known` is
+always protected, as deleting it can break SSL certificate renewal.
 
 ---
 
@@ -101,6 +106,9 @@ The workflow diagnoses the common problems itself and names them in the log.
 - **`Permission denied (publickey)`** — the key in the secret does not match
   one registered in SiteGround. The log prints the public half of the key it
   loaded; compare that against the SSH Keys Manager.
-- **Site looks stale after deploying** — hard-refresh (Ctrl+F5). HTML is set to
-  no-cache in `public/.htaccess`, but browsers still hold onto CSS, which is
-  fine because Astro fingerprints those filenames.
+- **Site looks stale after deploying** — hard-refresh (Ctrl+F5) to bypass the
+  browser cache. If you want cache behaviour controlled properly, add a
+  `site/.htaccess` setting HTML to no-cache while allowing CSS, JS and images
+  to be cached; the deploy copies dotfiles through.
+- **`Nothing to deploy: 'site/' does not exist`** — the folder was renamed or
+  removed. Put your HTML in `site/`, or add a build that outputs to `dist/`.

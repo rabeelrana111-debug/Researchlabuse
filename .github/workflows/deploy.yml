@@ -1,6 +1,6 @@
 name: Deploy to SiteGround
 
-# Builds the Astro site and deploys the generated HTML on every push to main.
+# Publishes the site to SiteGround on every push to main.
 # Also runnable on demand from the Actions tab.
 on:
   push:
@@ -48,27 +48,58 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- Build -----------------------------------------------------------
+      # --- Work out how this site is built ---------------------------------
+      #
+      # Two shapes are supported, so the pipeline keeps working whether you
+      # write plain HTML or adopt a build tool later:
+      #
+      #   1. No package.json  -> the contents of site/ are published as-is
+      #   2. package.json      -> `npm ci && npm run build`, and dist/ is
+      #                           published
+      #
+      # Nothing here needs changing when you switch between the two.
+      - name: Determine build mode
+        id: mode
+        run: |
+          if [ -f package.json ]; then
+            echo "Build tool detected (package.json present)."
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+            echo "publish_dir=dist" >> "$GITHUB_OUTPUT"
+          else
+            echo "No package.json — publishing site/ as plain static files."
+            echo "needs_build=false" >> "$GITHUB_OUTPUT"
+            echo "publish_dir=site" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set up Node
+        if: steps.mode.outputs.needs_build == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
+        if: steps.mode.outputs.needs_build == 'true'
         run: npm ci
 
       - name: Build site
+        if: steps.mode.outputs.needs_build == 'true'
         run: npm run build
 
-      - name: Check the build produced something
+      # Refuse to publish an empty directory, so a broken build or an
+      # accidentally deleted folder cannot blank the live site.
+      - name: Check there is something to publish
         run: |
-          if [ ! -f dist/index.html ]; then
-            echo "::error::The build finished but dist/index.html is missing. Refusing to deploy an empty site."
+          DIR="${{ steps.mode.outputs.publish_dir }}"
+          if [ ! -d "$DIR" ]; then
+            echo "::error::Nothing to deploy: '$DIR/' does not exist. Put your HTML in site/, or add a build that outputs to dist/."
             exit 1
           fi
-          echo "Built $(find dist -type f | wc -l) files."
+          if [ ! -f "$DIR/index.html" ]; then
+            echo "::error::'$DIR/' has no index.html, so the homepage would 404. Refusing to deploy."
+            exit 1
+          fi
+          echo "Publishing $(find "$DIR" -type f | wc -l) files from $DIR/."
 
       # --- Connection ------------------------------------------------------
 
@@ -208,7 +239,7 @@ jobs:
             rsync -rlz --partial --no-perms --no-owner --no-group \
               --itemize-changes $DELETE_FLAGS \
               -e "ssh -i ~/.ssh/deploy_key -p $SG_PORT $SSH_OPTS" \
-              dist/ \
+              "${{ steps.mode.outputs.publish_dir }}/" \
               "$SG_USER@$SG_HOST:$SG_PATH/"
 
       - name: Done
