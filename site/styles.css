@@ -801,3 +801,182 @@ ul, ol { margin: 0; padding: 0; }
 /* On interior pages the heading block is the whole section, so its trailing
    margin — meant to separate it from following content — just adds a gap. */
 .section > .wrap > .sectionhead:only-child { margin-bottom: 0; }
+
+/* ---------------------------------------------------------------------------
+   Dropdown navigation
+   ---------------------------------------------------------------------------
+   Opens on hover for mice and on :focus-within for keyboards, so it works
+   with JavaScript disabled. script.js adds click/touch handling and keeps
+   aria-expanded honest for screen readers.
+   ------------------------------------------------------------------------ */
+
+.navitem {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: var(--s-1);
+}
+
+.navitem__toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--ink);
+	cursor: pointer;
+}
+
+.navitem__chevron {
+	width: .45rem;
+	height: .45rem;
+	border-right: 2px solid currentColor;
+	border-bottom: 2px solid currentColor;
+	transform: rotate(45deg) translate(-1px, -1px);
+	transition: transform .18s ease;
+}
+
+.navitem__toggle[aria-expanded="true"] .navitem__chevron {
+	transform: rotate(-135deg) translate(-1px, -1px);
+}
+
+.submenu {
+	position: absolute;
+	top: 100%;
+	left: calc(var(--s-4) * -1);
+	z-index: 120;
+	min-width: 15rem;
+	margin: 0;
+	padding: var(--s-2);
+	list-style: none;
+	background: var(--white);
+	border: 1px solid var(--line);
+	border-radius: var(--r);
+	box-shadow: var(--shadow-lg);
+
+	/* Hidden by default. visibility (rather than display) keeps the panel
+	   focusable-in-order and lets the fade animate. */
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(-4px);
+	transition: opacity .16s ease, transform .16s ease, visibility .16s;
+}
+
+/* Three ways in: hover for mice, focus-within for keyboards (both CSS-only,
+   so they work with JavaScript disabled), and an explicit class that script.js
+   sets for click and touch. Keying off a class on the parent rather than a
+   sibling combinator keeps this independent of element order. */
+.navitem:hover > .submenu,
+html:not(.has-js) .navitem:focus-within > .submenu,
+.navitem.is-open > .submenu {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
+}
+
+.submenu a {
+	display: block;
+	padding: var(--s-2) var(--s-3);
+	border-radius: var(--r-sm);
+	font-size: var(--t-sm);
+	font-weight: 600;
+	color: var(--ink);
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.submenu a:hover,
+.submenu a:focus-visible {
+	background: var(--brand-50);
+	color: var(--brand);
+}
+
+.submenu a[aria-current="page"] {
+	color: var(--accent);
+	background: var(--brand-50);
+}
+
+/* On narrow screens the nav is a stacked list, so the panel sits inline
+   rather than floating over the page. */
+@media (max-width: 1040px) {
+	.navitem {
+		flex-wrap: wrap;
+		width: 100%;
+		border-bottom: 1px solid var(--line);
+	}
+	.navitem > a { flex: 1; border-bottom: 0; }
+	.navitem__toggle { width: 2.75rem; height: 2.75rem; }
+
+	.submenu {
+		position: static;
+		width: 100%;
+		border: 0;
+		box-shadow: none;
+		padding: 0 0 var(--s-3) var(--s-4);
+		transform: none;
+		/* Collapsed inline: height 0 rather than a floating panel. */
+		display: none;
+		opacity: 1;
+		visibility: visible;
+	}
+	/* Touch devices report hover unreliably, so on narrow screens the panel
+	   opens only on an explicit tap or keyboard focus. */
+	html:not(.has-js) .navitem:focus-within > .submenu,
+	.navitem.is-open > .submenu { display: block; }
+}
+
+/* ---------------------------------------------------------------------------
+   Breadcrumbs
+   ------------------------------------------------------------------------ */
+
+.crumbs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--s-2);
+	margin-bottom: var(--s-6);
+	font-size: var(--t-sm);
+	color: var(--muted);
+}
+
+.crumbs a { text-decoration: none; }
+.crumbs a:hover { text-decoration: underline; }
+.crumbs [aria-current="page"] { color: var(--ink); font-weight: 600; }
+
+/* ---------------------------------------------------------------------------
+   Specification table
+   ------------------------------------------------------------------------ */
+
+.spec-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: var(--t-sm);
+}
+
+.spec-table th,
+.spec-table td {
+	padding: var(--s-3);
+	border-bottom: 1px solid var(--line);
+	text-align: left;
+	vertical-align: top;
+}
+
+.spec-table th {
+	width: 45%;
+	font-weight: 600;
+	color: var(--ink);
+	background: var(--surface-alt);
+}
+
+/* Wide tables scroll inside their own box, never the page. */
+.table-scroll { overflow-x: auto; }
+
+.h-sm { font-size: var(--t-lg); margin-bottom: var(--s-3); }
+
+.note-sm {
+	margin-top: var(--s-3);
+	font-size: var(--t-xs);
+	color: var(--muted);
+}
