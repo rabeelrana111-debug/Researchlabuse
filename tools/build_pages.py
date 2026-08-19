@@ -13,10 +13,28 @@ maintenance tool, not part of the deploy.
     python3 tools/build_pages.py
 """
 
+import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
+
+
+def asset(path: str) -> str:
+    """Return an asset URL carrying a short hash of the file's contents.
+
+    Stylesheets and scripts are cached hard by the browser, so an edit under
+    the same URL stays invisible until the cache expires. Appending a hash of
+    the contents changes the URL whenever the file changes — the new version
+    is fetched immediately, and unchanged files still cache for a year.
+
+    Regenerate the pages after editing CSS or JS, or the hash will be stale.
+    """
+    f = SITE / path.lstrip("/")
+    if not f.exists():
+        return path
+    digest = hashlib.sha256(f.read_bytes()).hexdigest()[:10]
+    return f"{path}?v={digest}"
 
 SITE_NAME = "Research Lab USA"
 EMAIL = "info@researchlabusa.com"
@@ -136,7 +154,7 @@ def head(title: str, description: str, canonical: str,
 \t<meta name="description" content="{description}">
 \t<link rel="canonical" href="https://researchlabusa.com{canonical}">
 \t<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
-\t<link rel="stylesheet" href="/styles.css">
+\t<link rel="stylesheet" href="{asset('/styles.css')}">
 </head>
 <body>
 
@@ -228,7 +246,7 @@ FOOTER = f"""</main>
 
 <a class="totop" href="#main" aria-label="Back to top"><span aria-hidden="true">Back to top</span></a>
 
-<script src="/script.js" defer></script>
+<script src="{asset('/script.js')}" defer></script>
 </body>
 </html>
 """
