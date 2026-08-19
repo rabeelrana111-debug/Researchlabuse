@@ -18,12 +18,14 @@ ErrorDocument 404 /404.html
 </IfModule>
 
 # --- Caching ---------------------------------------------------------------
-# Images are replaced in place, keeping the same filename — so a long cache
-# would leave visitors looking at the previous picture for weeks. One day
-# bounds that while still avoiding a re-download on every page view.
+# CSS and JS are requested with a ?v= hash of their contents, so editing
+# either produces a new URL and the change is picked up immediately. That
+# makes a long cache safe for them.
 #
-# If you ever adopt fingerprinted filenames (image.a1b2c3.jpg), raise the
-# image lifetime to a year; the new name defeats the cache by itself.
+# Images are still replaced in place under the same filename, so they get one
+# day — long enough to avoid a re-download on every page view, short enough
+# that a replacement is not stranded for weeks. Give them the same ?v=
+# treatment and this can be raised too.
 #
 # HTML must stay uncached or visitors keep seeing the previous version of a
 # page after a deploy.
@@ -33,8 +35,8 @@ ErrorDocument 404 /404.html
 	ExpiresByType text/html              "access plus 0 seconds"
 	ExpiresByType application/xml        "access plus 0 seconds"
 
-	ExpiresByType text/css               "access plus 7 days"
-	ExpiresByType application/javascript "access plus 7 days"
+	ExpiresByType text/css               "access plus 1 year"
+	ExpiresByType application/javascript "access plus 1 year"
 
 	ExpiresByType image/jpeg             "access plus 1 day"
 	ExpiresByType image/png              "access plus 1 day"
