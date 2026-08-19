@@ -384,8 +384,8 @@ CONTACT = """\t<section class="section">
 """ + NOTICE
 
 GUIDE_CARDS = [
-    ("GW-501516", "ampoules-bench.jpg",
-     "Amber glass ampoules on a laboratory bench beside a microscope",
+    ("GW-501516", "ampoules-microscope.jpg",
+     "Amber and clear glass ampoules on a bench in front of a microscope",
      "A PPAR&delta; receptor agonist studied in metabolic and endurance research. "
      "Covers chemical identity, handling and storage, and what the published animal "
      "literature does and does not establish.", True),
@@ -536,6 +536,23 @@ NOOTROPICS = topic_page(
 )
 
 
+NOT_FOUND = """\t<section class="section">
+\t\t<div class="wrap">
+\t\t\t<div class="sectionhead">
+\t\t\t\t<p class="eyebrow">Error 404</p>
+\t\t\t\t<h1>We couldn&rsquo;t find that page</h1>
+\t\t\t\t<p class="lede">The link may be out of date, or the page may have
+\t\t\t\tmoved. The guides below are a good place to pick up.</p>
+\t\t\t\t<div class="btnrow mt-8">
+\t\t\t\t\t<a class="btn btn--primary" href="/guides.html">Browse the guides</a>
+\t\t\t\t\t<a class="btn btn--secondary" href="/">Go to the homepage</a>
+\t\t\t\t</div>
+\t\t\t</div>
+\t\t</div>
+\t</section>
+"""
+
+
 def main() -> None:
     home_body = (ROOT / "content" / "home.html").read_text(encoding="utf-8")
 
@@ -570,6 +587,9 @@ def main() -> None:
     write("nootropics.html", "Nootropics",
           "Reference material on nootropic research compounds, with an explicit account "
           "of where the published evidence is thin.", NOOTROPICS)
+
+    write("404.html", "Page not found",
+          "The page you were looking for does not exist.", NOT_FOUND)
 
 
 if __name__ == "__main__":
