@@ -60,7 +60,7 @@ NAV = [
     ]),
     ("/guides.html", "Guides", []),
     ("/about.html", "About", []),
-    ("/contact.html", "Contact", []),
+    ("/contact.php", "Contact", []),
 ]
 
 # --- Icons ----------------------------------------------------------------
@@ -195,7 +195,7 @@ def head(title: str, description: str, canonical: str,
 \t\t</nav>
 
 \t\t<div class="header__actions">
-\t\t\t<a class="btn btn--ghost" href="/contact.html">Enquire</a>
+\t\t\t<a class="btn btn--ghost" href="/contact.php">Enquire</a>
 \t\t</div>
 \t</div>
 </header>
@@ -227,7 +227,7 @@ FOOTER = f"""</main>
 \t\t\t\t<p class="footer__title">Site</p>
 \t\t\t\t<ul class="footer__list">
 \t\t\t\t\t<li><a href="/about.html">About</a></li>
-\t\t\t\t\t<li><a href="/contact.html">Contact</a></li>
+\t\t\t\t\t<li><a href="/contact.php">Contact</a></li>
 \t\t\t\t</ul>
 \t\t\t</div>
 \t\t\t<div>
@@ -323,7 +323,7 @@ def topic_page(topic: str, eyebrow: str, title: str, lede: str,
 \t\t\t\t<p>If something in a guide is unclear, or you think we have it wrong,
 \t\t\t\ttell us — corrections are published with a note explaining what changed.</p>
 \t\t\t\t<div class="btnrow btnrow--center">
-\t\t\t\t\t<a class="btn btn--primary" href="/contact.html">Get in touch</a>
+\t\t\t\t\t<a class="btn btn--primary" href="/contact.php">Get in touch</a>
 \t\t\t\t</div>
 \t\t\t</div>
 \t\t</div>
@@ -332,9 +332,10 @@ def topic_page(topic: str, eyebrow: str, title: str, lede: str,
 
 
 def write(path: str, title: str, description: str, body: str,
-          full_title: str | None = None) -> None:
+          full_title: str | None = None, prelude: str = "") -> None:
+    """Write one page. `prelude` goes above the doctype, for a PHP handler."""
     canonical = "/" if path == "index.html" else f"/{path}"
-    out = head(title, description, canonical, full_title) + body + FOOTER
+    out = prelude + head(title, description, canonical, full_title) + body + FOOTER
     (SITE / path).write_text(out, encoding="utf-8")
     print(f"wrote site/{path}  ({len(out.splitlines())} lines)")
 
@@ -466,7 +467,7 @@ ABOUT = """\t<section class="section">
 \t\t\t<p>Corrections, questions and suggestions for what to cover next are all
 \t\t\twelcome, and corrections get published. Reach us at
 \t\t\t<a href="mailto:""" + EMAIL + """">""" + EMAIL + """</a> or through the
-\t\t\t<a href="/contact.html">contact page</a>.</p>
+\t\t\t<a href="/contact.php">contact page</a>.</p>
 \t\t\t</div>
 \t\t</div>
 \t</section>
@@ -478,7 +479,7 @@ ABOUT = """\t<section class="section">
 \t\t\t\t<h2>Found something wrong?</h2>
 \t\t\t\t<p>Tell us and it gets fixed, with a note saying what changed.</p>
 \t\t\t\t<div class="btnrow btnrow--center">
-\t\t\t\t\t<a class="btn btn--primary" href="/contact.html">Contact us</a>
+\t\t\t\t\t<a class="btn btn--primary" href="/contact.php">Contact us</a>
 \t\t\t\t\t<a class="btn btn--light" href="/guides.html">Browse the guides</a>
 \t\t\t\t</div>
 \t\t\t</div>
@@ -580,7 +581,7 @@ GUIDES = """\t<section class="section">
 \t\t\t</div>
 \t\t\t<p class="mt-8 measure">More guides are in preparation. If there is a
 \t\t\tcompound you would like covered,
-\t\t\t<a href="/contact.html">tell us</a> &mdash; requests genuinely shape what
+\t\t\t<a href="/contact.php">tell us</a> &mdash; requests genuinely shape what
 \t\t\twe write next.</p>
 \t\t</div>
 \t</section>
@@ -713,9 +714,10 @@ def main() -> None:
           "Who we are, how we write, and how we handle corrections. Independent "
           "reference material for laboratory researchers.", ABOUT)
 
-    write("contact.html", "Contact",
+    # Served as .php so the page can handle its own form submission.
+    write("contact.php", "Contact",
           "Questions, corrections and suggestions for what to cover next. "
-          f"Reach us at {EMAIL}.", CONTACT)
+          f"Reach us at {EMAIL}.", CONTACT, prelude=CONTACT_PHP)
 
     write("guides.html", "Guides",
           "Reference guides covering chemical identity, handling, storage and the "
@@ -822,7 +824,7 @@ def compound_page(name: str, parent_label: str, parent_href: str,
 \t\t\t\t<p>If something here is wrong or out of date, tell us. Corrections are
 \t\t\t\tpublished with a note describing what changed.</p>
 \t\t\t\t<div class="btnrow btnrow--center">
-\t\t\t\t\t<a class="btn btn--primary" href="/contact.html">Get in touch</a>
+\t\t\t\t\t<a class="btn btn--primary" href="/contact.php">Get in touch</a>
 \t\t\t\t\t<a class="btn btn--light" href="{parent_href}">All {parent_label}</a>
 \t\t\t\t</div>
 \t\t\t</div>
@@ -1180,6 +1182,238 @@ def build_compound_pages() -> None:
         write(path, cfg["title"],
               f"{cfg['name']}: identity, handling and the state of the published "
               f"record. Laboratory research use only.", body)
+
+
+# --------------------------------------------------------------------------
+# Contact page
+# --------------------------------------------------------------------------
+#
+# The site is otherwise plain static files, but a static page cannot send an
+# email. SiteGround serves this over Apache with PHP available, so the contact
+# page is a .php file that both renders itself and handles its own POST. That
+# avoids depending on a third-party form service.
+#
+# If PHP mail() turns out to be blocked on the hosting plan, the fallback is a
+# form service (Formspree, Web3Forms, Basin): change the form's action to the
+# endpoint they give you and delete the PHP block.
+
+CONTACT_PHP = r"""<?php
+/**
+ * Contact form handler for researchlabusa.com.
+ *
+ * Renders the page and, on POST, emails the enquiry to the address in $to.
+ * Kept in one file so a failed submission can redisplay the form with the
+ * visitor's text still in it, rather than losing what they typed.
+ */
+
+$sent   = false;
+$errors = [];
+$values = ['name' => '', 'email' => '', 'phone' => '', 'subject' => '', 'message' => ''];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    foreach ($values as $key => $_) {
+        $values[$key] = trim((string) ($_POST[$key] ?? ''));
+    }
+
+    // Honeypot. The field is hidden from people, so anything in it came from
+    // a bot. Report success rather than an error: telling a bot it failed
+    // just invites a retry with the field left empty.
+    if (trim((string) ($_POST['company'] ?? '')) !== '') {
+        $sent   = true;
+        $values = array_fill_keys(array_keys($values), '');
+    } else {
+
+        if ($values['name'] === '') {
+            $errors[] = 'Please tell us your name.';
+        }
+        if (!filter_var($values['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Please enter an email address we can reply to.';
+        }
+        if ($values['message'] === '') {
+            $errors[] = 'Please write a message.';
+        }
+
+        if (!$errors) {
+            $to = 'info@researchlabusa.com';
+
+            // Strip CR and LF from anything that reaches a mail header.
+            // Without this a crafted address could append its own headers and
+            // turn the form into an open relay.
+            $header_safe = static function ($value) {
+                return trim(str_replace(["\r", "\n", "%0a", "%0d"], ' ', $value));
+            };
+
+            $subject = $values['subject'] !== ''
+                ? $header_safe($values['subject'])
+                : 'Website enquiry';
+
+            // From must be an address on this domain or SPF and DKIM fail and
+            // the mail lands in spam. The visitor's address goes in Reply-To,
+            // so hitting reply still reaches them.
+            $headers = implode("\r\n", [
+                'From: Research Lab USA <noreply@researchlabusa.com>',
+                'Reply-To: ' . $header_safe($values['email']),
+                'Content-Type: text/plain; charset=UTF-8',
+                'MIME-Version: 1.0',
+            ]);
+
+            $body = "New enquiry from the website contact form.\n\n"
+                  . 'Name:    ' . $values['name'] . "\n"
+                  . 'Email:   ' . $values['email'] . "\n"
+                  . 'Phone:   ' . ($values['phone'] !== '' ? $values['phone'] : '(not given)') . "\n"
+                  . 'Subject: ' . ($values['subject'] !== '' ? $values['subject'] : '(none)') . "\n\n"
+                  . "Message:\n" . $values['message'] . "\n";
+
+            $sent = @mail($to, '[Website] ' . $subject, $body, $headers);
+
+            if ($sent) {
+                $values = array_fill_keys(array_keys($values), '');
+            } else {
+                $errors[] = 'Something went wrong sending your message. '
+                          . 'Please email us directly at info@researchlabusa.com.';
+            }
+        }
+    }
+}
+
+/** Escape a value for safe output in HTML. */
+function e($value) {
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+}
+?>
+"""
+
+CONTACT = """\t<section class="section">
+\t\t<div class="wrap">
+\t\t\t<div class="sectionhead">
+\t\t\t\t<p class="eyebrow">""" + ICON_DNA + """ Contact us</p>
+\t\t\t\t<h1>Write to us any time</h1>
+\t\t\t\t<p class="lede">Questions about a guide, corrections, and suggestions
+\t\t\t\tfor what to cover next are all welcome. We reply within one business
+\t\t\t\tday.</p>
+\t\t\t</div>
+
+\t\t\t<div class="contactgrid">
+\t\t\t\t<!-- Contact details panel -->
+\t\t\t\t<aside class="contactpanel">
+\t\t\t\t\t<div class="contactpanel__top">
+\t\t\t\t\t\t<div class="contactpanel__item">
+\t\t\t\t\t\t\t<span class="contactpanel__icon" aria-hidden="true">
+\t\t\t\t\t\t\t\t<svg viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm9 8L4.2 7.2v.9L12 14l7.8-5.9v-.9Z"/></svg>
+\t\t\t\t\t\t\t</span>
+\t\t\t\t\t\t\t<div>
+\t\t\t\t\t\t\t\t<p class="contactpanel__label">Send an email</p>
+\t\t\t\t\t\t\t\t<p class="contactpanel__value">
+\t\t\t\t\t\t\t\t\t<a href="mailto:""" + EMAIL + '">' + EMAIL + """</a>
+\t\t\t\t\t\t\t\t</p>
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t</div>
+
+\t\t\t\t\t\t<div class="contactpanel__item">
+\t\t\t\t\t\t\t<span class="contactpanel__icon" aria-hidden="true">
+\t\t\t\t\t\t\t\t<svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
+\t\t\t\t\t\t\t</span>
+\t\t\t\t\t\t\t<div>
+\t\t\t\t\t\t\t\t<p class="contactpanel__label">Response time</p>
+\t\t\t\t\t\t\t\t<p class="contactpanel__value">Within one business day</p>
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t</div>
+\t\t\t\t\t</div>
+
+\t\t\t\t\t<div class="contactpanel__media">
+\t\t\t\t\t\t<img src="/assets/ampoules-microscope.jpg"
+\t\t\t\t\t\t     alt="Glass ampoules on a bench in front of a microscope"
+\t\t\t\t\t\t     width="1600" height="1067" loading="lazy" decoding="async">
+\t\t\t\t\t</div>
+\t\t\t\t</aside>
+
+\t\t\t\t<!-- Enquiry form -->
+\t\t\t\t<div class="contactform">
+<?php if ($sent): ?>
+\t\t\t\t\t<p class="formnote formnote--ok" role="status">
+\t\t\t\t\t\t<strong>Thank you &mdash; your message has been sent.</strong>
+\t\t\t\t\t\tWe reply within one business day.
+\t\t\t\t\t</p>
+<?php endif; ?>
+<?php if ($errors): ?>
+\t\t\t\t\t<div class="formnote formnote--error" role="alert">
+\t\t\t\t\t\t<strong>Your message was not sent.</strong>
+\t\t\t\t\t\t<ul>
+<?php foreach ($errors as $error): ?>
+\t\t\t\t\t\t\t<li><?= e($error) ?></li>
+<?php endforeach; ?>
+\t\t\t\t\t\t</ul>
+\t\t\t\t\t</div>
+<?php endif; ?>
+
+\t\t\t\t\t<form method="post" action="/contact.php#form" id="form" novalidate>
+\t\t\t\t\t\t<div class="formgrid">
+\t\t\t\t\t\t\t<div class="field">
+\t\t\t\t\t\t\t\t<label class="label" for="name">Your name</label>
+\t\t\t\t\t\t\t\t<input class="input" type="text" id="name" name="name"
+\t\t\t\t\t\t\t\t       value="<?= e($values['name']) ?>" required>
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t\t<div class="field">
+\t\t\t\t\t\t\t\t<label class="label" for="email">Email address</label>
+\t\t\t\t\t\t\t\t<input class="input" type="email" id="email" name="email"
+\t\t\t\t\t\t\t\t       value="<?= e($values['email']) ?>" required>
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t\t<div class="field">
+\t\t\t\t\t\t\t\t<label class="label" for="phone">Phone <span class="label__opt">(optional)</span></label>
+\t\t\t\t\t\t\t\t<input class="input" type="tel" id="phone" name="phone"
+\t\t\t\t\t\t\t\t       value="<?= e($values['phone']) ?>">
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t\t<div class="field">
+\t\t\t\t\t\t\t\t<label class="label" for="subject">Subject <span class="label__opt">(optional)</span></label>
+\t\t\t\t\t\t\t\t<input class="input" type="text" id="subject" name="subject"
+\t\t\t\t\t\t\t\t       value="<?= e($values['subject']) ?>">
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t</div>
+
+\t\t\t\t\t\t<div class="field">
+\t\t\t\t\t\t\t<label class="label" for="message">Your message</label>
+\t\t\t\t\t\t\t<textarea class="textarea" id="message" name="message" rows="8"
+\t\t\t\t\t\t\t          required><?= e($values['message']) ?></textarea>
+\t\t\t\t\t\t</div>
+
+\t\t\t\t\t\t<!-- Honeypot: hidden from people, irresistible to bots. -->
+\t\t\t\t\t\t<div class="hp" aria-hidden="true">
+\t\t\t\t\t\t\t<label for="company">Company</label>
+\t\t\t\t\t\t\t<input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
+\t\t\t\t\t\t</div>
+
+\t\t\t\t\t\t<button class="btn btn--primary" type="submit">Send message</button>
+\t\t\t\t\t\t<p class="note-sm">We use your details only to reply to this
+\t\t\t\t\t\tenquiry. Please do not send confidential information through
+\t\t\t\t\t\tthis form.</p>
+\t\t\t\t\t</form>
+\t\t\t\t</div>
+\t\t\t</div>
+\t\t</div>
+\t</section>
+
+\t<section class="section section--tight">
+\t\t<div class="wrap">
+\t\t\t<div class="measure prose">
+\t\t\t\t<h2>What we can help with</h2>
+\t\t\t\t<ul>
+\t\t\t\t\t<li>Questions about anything in a guide</li>
+\t\t\t\t\t<li>Corrections, including sources we have missed or misread</li>
+\t\t\t\t\t<li>Suggestions for compounds or topics to cover next</li>
+\t\t\t\t\t<li>Requests to cite or reference our material</li>
+\t\t\t\t</ul>
+
+\t\t\t\t<h2>What we cannot help with</h2>
+\t\t\t\t<p>We do not give dosing guidance, advise on human or veterinary use,
+\t\t\t\tor recommend where to buy anything. Messages asking for those will not
+\t\t\t\tget a useful reply, and we would rather say so here than leave you
+\t\t\t\twaiting for one.</p>
+\t\t\t</div>
+\t\t</div>
+\t</section>
+
+""" + NOTICE
 
 if __name__ == "__main__":
     main()

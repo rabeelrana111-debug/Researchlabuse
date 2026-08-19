@@ -8,6 +8,14 @@
 
 ErrorDocument 404 /404.html
 
+# The contact page moved to .php so it can handle its own form submission.
+# It was live at the old address, so redirect rather than 404 anyone holding
+# a link to it.
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteRule ^contact\.html$ /contact.php [R=301,L]
+</IfModule>
+
 # --- Compression -----------------------------------------------------------
 # Text assets compress by roughly 70%, the biggest single win for page weight.
 <IfModule mod_deflate.c>
