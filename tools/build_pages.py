@@ -42,25 +42,25 @@ EMAIL = "info@researchlabusa.com"
 # Navigation. A third element, when present, is a dropdown of child pages.
 NAV = [
     ("/", "Home", []),
-    ("/sarms.html", "SARMs", [
-        ("/sarms/gw-501516.html", "GW-501516 (Cardarine)"),
-        ("/sarms/mk-2866.html", "MK-2866 (Ostarine)"),
-        ("/sarms/rad-140.html", "RAD-140 (Testolone)"),
+    ("/sarms/", "SARMs", [
+        ("/sarms/gw-501516/", "GW-501516 (Cardarine)"),
+        ("/sarms/mk-2866/", "MK-2866 (Ostarine)"),
+        ("/sarms/rad-140/", "RAD-140 (Testolone)"),
     ]),
-    ("/peptides.html", "Peptides", [
-        ("/peptides/bpc-157.html", "BPC-157"),
-        ("/peptides/semaglutide.html", "Semaglutide"),
-        ("/peptides/tb-500.html", "TB-500"),
+    ("/peptides/", "Peptides", [
+        ("/peptides/bpc-157/", "BPC-157"),
+        ("/peptides/semaglutide/", "Semaglutide"),
+        ("/peptides/tb-500/", "TB-500"),
     ]),
-    ("/nootropics.html", "Nootropics", [
-        ("/nootropics/adrafinil.html", "Adrafinil"),
-        ("/nootropics/cyclazodone.html", "Cyclazodone"),
-        ("/nootropics/flmodafinil.html", "Flmodafinil"),
-        ("/nootropics/phenylpiracetam.html", "Phenylpiracetam"),
+    ("/nootropics/", "Nootropics", [
+        ("/nootropics/adrafinil/", "Adrafinil"),
+        ("/nootropics/cyclazodone/", "Cyclazodone"),
+        ("/nootropics/flmodafinil/", "Flmodafinil"),
+        ("/nootropics/phenylpiracetam/", "Phenylpiracetam"),
     ]),
-    ("/guides.html", "Guides", []),
-    ("/about.html", "About", []),
-    ("/contact.php", "Contact", []),
+    ("/guides/", "Guides", []),
+    ("/about/", "About", []),
+    ("/contact/", "Contact", []),
 ]
 
 # --- Icons ----------------------------------------------------------------
@@ -139,12 +139,20 @@ def nav_links(current: str) -> str:
     return "\n".join(out)
 
 
-def head(title: str, description: str, canonical: str,
+def head(title: str, description: str, canonical: str | None,
          full_title: str | None = None) -> str:
     # Pages get "Page | Site"; a page may override with its own full title
     # where a more descriptive one reads better in search results.
     if full_title is None:
         full_title = title if title == SITE_NAME else f"{title} | {SITE_NAME}"
+    # A canonical of None means the page has no address of its own — the 404
+    # body is served under whatever URL was missed, so pointing a canonical at
+    # it would advertise a URL that does not exist. Keep it out of the index
+    # instead.
+    if canonical is None:
+        index_meta = '<meta name="robots" content="noindex">'
+    else:
+        index_meta = f'<link rel="canonical" href="https://researchlabusa.com{canonical}">'
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -152,7 +160,7 @@ def head(title: str, description: str, canonical: str,
 \t<meta name="viewport" content="width=device-width, initial-scale=1">
 \t<title>{full_title}</title>
 \t<meta name="description" content="{description}">
-\t<link rel="canonical" href="https://researchlabusa.com{canonical}">
+\t{index_meta}
 \t<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 \t<link rel="stylesheet" href="{asset('/styles.css')}">
 </head>
@@ -195,7 +203,7 @@ def head(title: str, description: str, canonical: str,
 \t\t</nav>
 
 \t\t<div class="header__actions">
-\t\t\t<a class="btn btn--ghost" href="/contact.php">Enquire</a>
+\t\t\t<a class="btn btn--ghost" href="/contact/">Enquire</a>
 \t\t</div>
 \t</div>
 </header>
@@ -217,17 +225,17 @@ FOOTER = f"""</main>
 \t\t\t<div>
 \t\t\t\t<p class="footer__title">Topics</p>
 \t\t\t\t<ul class="footer__list">
-\t\t\t\t\t<li><a href="/sarms.html">SARMs</a></li>
-\t\t\t\t\t<li><a href="/peptides.html">Peptides</a></li>
-\t\t\t\t\t<li><a href="/nootropics.html">Nootropics</a></li>
-\t\t\t\t\t<li><a href="/guides.html">All guides</a></li>
+\t\t\t\t\t<li><a href="/sarms/">SARMs</a></li>
+\t\t\t\t\t<li><a href="/peptides/">Peptides</a></li>
+\t\t\t\t\t<li><a href="/nootropics/">Nootropics</a></li>
+\t\t\t\t\t<li><a href="/guides/">All guides</a></li>
 \t\t\t\t</ul>
 \t\t\t</div>
 \t\t\t<div>
 \t\t\t\t<p class="footer__title">Site</p>
 \t\t\t\t<ul class="footer__list">
-\t\t\t\t\t<li><a href="/about.html">About</a></li>
-\t\t\t\t\t<li><a href="/contact.php">Contact</a></li>
+\t\t\t\t\t<li><a href="/about/">About</a></li>
+\t\t\t\t\t<li><a href="/contact/">Contact</a></li>
 \t\t\t\t</ul>
 \t\t\t</div>
 \t\t\t<div>
@@ -323,7 +331,7 @@ def topic_page(topic: str, eyebrow: str, title: str, lede: str,
 \t\t\t\t<p>If something in a guide is unclear, or you think we have it wrong,
 \t\t\t\ttell us — corrections are published with a note explaining what changed.</p>
 \t\t\t\t<div class="btnrow btnrow--center">
-\t\t\t\t\t<a class="btn btn--primary" href="/contact.php">Get in touch</a>
+\t\t\t\t\t<a class="btn btn--primary" href="/contact/">Get in touch</a>
 \t\t\t\t</div>
 \t\t\t</div>
 \t\t</div>
@@ -331,13 +339,34 @@ def topic_page(topic: str, eyebrow: str, title: str, lede: str,
 """
 
 
-def write(path: str, title: str, description: str, body: str,
-          full_title: str | None = None, prelude: str = "") -> None:
-    """Write one page. `prelude` goes above the doctype, for a PHP handler."""
-    canonical = "/" if path == "index.html" else f"/{path}"
+def write(route: str, title: str, description: str, body: str,
+          full_title: str | None = None, prelude: str = "",
+          ext: str = "html") -> None:
+    """Write one page at a clean, extensionless URL.
+
+    Routes map to directory indexes — "about" becomes site/about/index.html,
+    served at /about. Apache resolves that through DirectoryIndex with no
+    rewrite rules, so URLs stay clean without routing logic that could break
+    the whole site if a pattern were wrong.
+
+    Two routes are special: "" is the home page at site/index.html, and "404"
+    stays a flat file because ErrorDocument points at a path, not a URL. The
+    404 page also gets no canonical — it is served under the missing URL, not
+    under one of its own.
+    """
+    canonical: str | None
+    if route == "":
+        rel, canonical = "index.html", "/"
+    elif route == "404":
+        rel, canonical = "404.html", None
+    else:
+        rel, canonical = f"{route}/index.{ext}", f"/{route}/"
+
     out = prelude + head(title, description, canonical, full_title) + body + FOOTER
-    (SITE / path).write_text(out, encoding="utf-8")
-    print(f"wrote site/{path}  ({len(out.splitlines())} lines)")
+    dest = SITE / rel
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(out, encoding="utf-8")
+    print(f"wrote site/{rel}  -> {canonical or '(no canonical URL)'}")
 
 
 # --------------------------------------------------------------------------
@@ -467,7 +496,7 @@ ABOUT = """\t<section class="section">
 \t\t\t<p>Corrections, questions and suggestions for what to cover next are all
 \t\t\twelcome, and corrections get published. Reach us at
 \t\t\t<a href="mailto:""" + EMAIL + """">""" + EMAIL + """</a> or through the
-\t\t\t<a href="/contact.php">contact page</a>.</p>
+\t\t\t<a href="/contact/">contact page</a>.</p>
 \t\t\t</div>
 \t\t</div>
 \t</section>
@@ -479,8 +508,8 @@ ABOUT = """\t<section class="section">
 \t\t\t\t<h2>Found something wrong?</h2>
 \t\t\t\t<p>Tell us and it gets fixed, with a note saying what changed.</p>
 \t\t\t\t<div class="btnrow btnrow--center">
-\t\t\t\t\t<a class="btn btn--primary" href="/contact.php">Contact us</a>
-\t\t\t\t\t<a class="btn btn--light" href="/guides.html">Browse the guides</a>
+\t\t\t\t\t<a class="btn btn--primary" href="/contact/">Contact us</a>
+\t\t\t\t\t<a class="btn btn--light" href="/guides/">Browse the guides</a>
 \t\t\t\t</div>
 \t\t\t</div>
 \t\t</div>
@@ -581,7 +610,7 @@ GUIDES = """\t<section class="section">
 \t\t\t</div>
 \t\t\t<p class="mt-8 measure">More guides are in preparation. If there is a
 \t\t\tcompound you would like covered,
-\t\t\t<a href="/contact.php">tell us</a> &mdash; requests genuinely shape what
+\t\t\t<a href="/contact/">tell us</a> &mdash; requests genuinely shape what
 \t\t\twe write next.</p>
 \t\t</div>
 \t</section>
@@ -690,7 +719,7 @@ NOT_FOUND = """\t<section class="section">
 \t\t\t\t<p class="lede">The link may be out of date, or the page may have
 \t\t\t\tmoved. The guides below are a good place to pick up.</p>
 \t\t\t\t<div class="btnrow mt-8">
-\t\t\t\t\t<a class="btn btn--primary" href="/guides.html">Browse the guides</a>
+\t\t\t\t\t<a class="btn btn--primary" href="/guides/">Browse the guides</a>
 \t\t\t\t\t<a class="btn btn--secondary" href="/">Go to the homepage</a>
 \t\t\t\t</div>
 \t\t\t</div>
@@ -702,7 +731,7 @@ NOT_FOUND = """\t<section class="section">
 def main() -> None:
     home_body = (ROOT / "content" / "home.html").read_text(encoding="utf-8")
 
-    write("index.html", SITE_NAME,
+    write("", SITE_NAME,
           "Independent guides, methods notes and reference data on research compounds, "
           "peptides and nootropics. Written for laboratory researchers. "
           "For research use only.",
@@ -710,35 +739,36 @@ def main() -> None:
           full_title="Research Lab USA \u2014 Research Compound Guides "
                      "&amp; Laboratory Resources")
 
-    write("about.html", "About",
+    write("about", "About",
           "Who we are, how we write, and how we handle corrections. Independent "
           "reference material for laboratory researchers.", ABOUT)
 
     # Served as .php so the page can handle its own form submission.
-    write("contact.php", "Contact",
+    write("contact", "Contact",
           "Questions, corrections and suggestions for what to cover next. "
-          f"Reach us at {EMAIL}.", CONTACT, prelude=CONTACT_PHP)
+          f"Reach us at {EMAIL}.", CONTACT, prelude=CONTACT_PHP,
+          ext="php")
 
-    write("guides.html", "Guides",
+    write("guides", "Guides",
           "Reference guides covering chemical identity, handling, storage and the "
           "state of the published literature.", GUIDES)
 
-    write("sarms.html", "SARMs",
+    write("sarms", "SARMs",
           "Reference material on selective androgen receptor modulators as laboratory "
           "research compounds. For research use only.",
-          with_compounds(SARMS, "/sarms.html"))
+          with_compounds(SARMS, "/sarms/"))
 
-    write("peptides.html", "Peptides",
+    write("peptides", "Peptides",
           "Research peptide reference material: sequences, reconstitution, cold-chain "
           "handling and stability. For research use only.",
-          with_compounds(PEPTIDES, "/peptides.html"))
+          with_compounds(PEPTIDES, "/peptides/"))
 
-    write("nootropics.html", "Nootropics",
+    write("nootropics", "Nootropics",
           "Reference material on nootropic research compounds, with an explicit account "
           "of where the published evidence is thin.",
-          with_compounds(NOOTROPICS, "/nootropics.html"))
+          with_compounds(NOOTROPICS, "/nootropics/"))
 
-    write("404.html", "Page not found",
+    write("404", "Page not found",
           "The page you were looking for does not exist.", NOT_FOUND)
 
     build_compound_pages()
@@ -824,7 +854,7 @@ def compound_page(name: str, parent_label: str, parent_href: str,
 \t\t\t\t<p>If something here is wrong or out of date, tell us. Corrections are
 \t\t\t\tpublished with a note describing what changed.</p>
 \t\t\t\t<div class="btnrow btnrow--center">
-\t\t\t\t\t<a class="btn btn--primary" href="/contact.php">Get in touch</a>
+\t\t\t\t\t<a class="btn btn--primary" href="/contact/">Get in touch</a>
 \t\t\t\t\t<a class="btn btn--light" href="{parent_href}">All {parent_label}</a>
 \t\t\t\t</div>
 \t\t\t</div>
@@ -837,8 +867,8 @@ def compound_page(name: str, parent_label: str, parent_href: str,
 # published record. None describes effects in people, recommends use, or
 # gives dosing — that would turn a reference page into a drug claim.
 COMPOUNDS = {
-    "sarms/gw-501516.html": dict(
-        name="GW-501516 (Cardarine)", parent_label="SARMs", parent_href="/sarms.html",
+    "sarms/gw-501516": dict(
+        name="GW-501516 (Cardarine)", parent_label="SARMs", parent_href="/sarms/",
         title="GW-501516",
         summary="A PPAR&delta; agonist, frequently grouped with SARMs although it acts "
                 "on a different receptor family entirely.",
@@ -870,8 +900,8 @@ COMPOUNDS = {
 \t\t\t\t\tsubstantially between the free acid and salt forms, which is a
 \t\t\t\t\tfrequent source of preparation error.</p>"""),
 
-    "sarms/mk-2866.html": dict(
-        name="MK-2866 (Ostarine)", parent_label="SARMs", parent_href="/sarms.html",
+    "sarms/mk-2866": dict(
+        name="MK-2866 (Ostarine)", parent_label="SARMs", parent_href="/sarms/",
         title="MK-2866",
         summary="One of the most extensively studied SARMs, and the one with the "
                 "largest published clinical record.",
@@ -901,8 +931,8 @@ COMPOUNDS = {
 \t\t\t\t\tMislabelling is well documented across this product category, so the
 \t\t\t\t\tcertificate matters more here than the label does.</p>"""),
 
-    "sarms/rad-140.html": dict(
-        name="RAD-140 (Testolone)", parent_label="SARMs", parent_href="/sarms.html",
+    "sarms/rad-140": dict(
+        name="RAD-140 (Testolone)", parent_label="SARMs", parent_href="/sarms/",
         title="RAD-140",
         summary="A non-steroidal SARM whose published record is preclinical, with "
                 "notably less human data than MK-2866.",
@@ -932,8 +962,8 @@ COMPOUNDS = {
 \t\t\t\t\t<p>Confirm form, solubility and storage against your certificate of
 \t\t\t\t\tanalysis before preparing anything.</p>"""),
 
-    "peptides/bpc-157.html": dict(
-        name="BPC-157", parent_label="Peptides", parent_href="/peptides.html",
+    "peptides/bpc-157": dict(
+        name="BPC-157", parent_label="Peptides", parent_href="/peptides/",
         title="BPC-157",
         summary="A synthetic pentadecapeptide studied in animal models, with almost "
                 "no published human data.",
@@ -963,8 +993,8 @@ COMPOUNDS = {
 \t\t\t\t\t<p>Not an approved medicine. In 2023 the FDA placed it in a category
 \t\t\t\t\tof substances barred from compounding pending further evaluation.</p>"""),
 
-    "peptides/semaglutide.html": dict(
-        name="Semaglutide", parent_label="Peptides", parent_href="/peptides.html",
+    "peptides/semaglutide": dict(
+        name="Semaglutide", parent_label="Peptides", parent_href="/peptides/",
         title="Semaglutide",
         summary="A GLP-1 receptor agonist. Unlike most compounds catalogued here, "
                 "approved medicines containing it exist.",
@@ -993,8 +1023,8 @@ COMPOUNDS = {
 \t\t\t\t\tanalysis, and treat cold-chain excursions as affecting the
 \t\t\t\t\tspecification rather than as a formality.</p>"""),
 
-    "peptides/tb-500.html": dict(
-        name="TB-500", parent_label="Peptides", parent_href="/peptides.html",
+    "peptides/tb-500": dict(
+        name="TB-500", parent_label="Peptides", parent_href="/peptides/",
         title="TB-500",
         summary="A synthetic fragment related to thymosin beta-4, supplied "
                 "lyophilised.",
@@ -1024,8 +1054,8 @@ COMPOUNDS = {
 \t\t\t\t\t<p>Not approved for human or veterinary use, and prohibited in sport
 \t\t\t\t\tunder the WADA code.</p>"""),
 
-    "nootropics/adrafinil.html": dict(
-        name="Adrafinil", parent_label="Nootropics", parent_href="/nootropics.html",
+    "nootropics/adrafinil": dict(
+        name="Adrafinil", parent_label="Nootropics", parent_href="/nootropics/",
         title="Adrafinil",
         summary="A prodrug that metabolises to modafinil, with a correspondingly "
                 "different pharmacokinetic profile.",
@@ -1052,8 +1082,8 @@ COMPOUNDS = {
 \t\t\t\t\t<p>Supplied as a powder. Confirm purity and identity against the
 \t\t\t\t\tcertificate of analysis for your batch.</p>"""),
 
-    "nootropics/cyclazodone.html": dict(
-        name="Cyclazodone", parent_label="Nootropics", parent_href="/nootropics.html",
+    "nootropics/cyclazodone": dict(
+        name="Cyclazodone", parent_label="Nootropics", parent_href="/nootropics/",
         title="Cyclazodone",
         summary="A substituted aminorex derivative with a notably thin published "
                 "record.",
@@ -1078,8 +1108,8 @@ COMPOUNDS = {
 \t\t\t\t\tcharacterised, a certificate of analysis is the only meaningful
 \t\t\t\t\tevidence of what you actually have.</p>"""),
 
-    "nootropics/flmodafinil.html": dict(
-        name="Flmodafinil", parent_label="Nootropics", parent_href="/nootropics.html",
+    "nootropics/flmodafinil": dict(
+        name="Flmodafinil", parent_label="Nootropics", parent_href="/nootropics/",
         title="Flmodafinil",
         summary="A fluorinated modafinil analogue, also written CRL-40,940 and "
                 "bisfluoromodafinil.",
@@ -1107,8 +1137,8 @@ COMPOUNDS = {
 \t\t\t\t\t<p>Supplied as a powder. Confirm purity and storage conditions against
 \t\t\t\t\tyour certificate of analysis.</p>"""),
 
-    "nootropics/phenylpiracetam.html": dict(
-        name="Phenylpiracetam", parent_label="Nootropics", parent_href="/nootropics.html",
+    "nootropics/phenylpiracetam": dict(
+        name="Phenylpiracetam", parent_label="Nootropics", parent_href="/nootropics/",
         title="Phenylpiracetam",
         summary="A phenylated racetam developed in the Soviet Union, with much of "
                 "its literature published in Russian.",
@@ -1144,13 +1174,13 @@ def compound_list(parent_href: str) -> str:
     to anyone who arrives from search, and search engines follow body links
     more reliably than JavaScript-adjacent menus.
     """
-    entries = [(href, cfg) for href, cfg in COMPOUNDS.items()
+    entries = [(route, cfg) for route, cfg in COMPOUNDS.items()
                if cfg["parent_href"] == parent_href]
     cards = "\n".join(
         f"""\t\t\t\t<article class="card">
-\t\t\t\t\t<h3><a href="/{href}">{cfg['name']}</a></h3>
+\t\t\t\t\t<h3><a href="/{route}/">{cfg['name']}</a></h3>
 \t\t\t\t\t<p class="mb-0">{cfg['summary']}</p>
-\t\t\t\t</article>""" for href, cfg in entries
+\t\t\t\t</article>""" for route, cfg in entries
     )
     return f"""\t<section class="section section--tight">
 \t\t<div class="wrap">
@@ -1172,14 +1202,13 @@ def with_compounds(topic_html: str, parent_href: str) -> str:
 
 
 def build_compound_pages() -> None:
-    for path, cfg in COMPOUNDS.items():
-        (SITE / path).parent.mkdir(parents=True, exist_ok=True)
+    for route, cfg in COMPOUNDS.items():
         body = compound_page(
             name=cfg["name"], parent_label=cfg["parent_label"],
             parent_href=cfg["parent_href"], summary=cfg["summary"],
             body=cfg["body"], image=cfg["image"], alt=cfg["alt"],
         )
-        write(path, cfg["title"],
+        write(route, cfg["title"],
               f"{cfg['name']}: identity, handling and the state of the published "
               f"record. Laboratory research use only.", body)
 
@@ -1347,7 +1376,7 @@ CONTACT = """\t<section class="section">
 \t\t\t\t\t</div>
 <?php endif; ?>
 
-\t\t\t\t\t<form method="post" action="/contact.php#form" id="form" novalidate>
+\t\t\t\t\t<form method="post" action="/contact/#form" id="form" novalidate>
 \t\t\t\t\t\t<div class="formgrid">
 \t\t\t\t\t\t\t<div class="field">
 \t\t\t\t\t\t\t\t<label class="label" for="name">Your name</label>
