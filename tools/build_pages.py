@@ -21,14 +21,28 @@ SITE = ROOT / "site"
 SITE_NAME = "Research Lab USA"
 EMAIL = "info@researchlabusa.com"
 
+# Navigation. A third element, when present, is a dropdown of child pages.
 NAV = [
-    ("/", "Home"),
-    ("/sarms.html", "SARMs"),
-    ("/peptides.html", "Peptides"),
-    ("/nootropics.html", "Nootropics"),
-    ("/guides.html", "Guides"),
-    ("/about.html", "About"),
-    ("/contact.html", "Contact"),
+    ("/", "Home", []),
+    ("/sarms.html", "SARMs", [
+        ("/sarms/gw-501516.html", "GW-501516 (Cardarine)"),
+        ("/sarms/mk-2866.html", "MK-2866 (Ostarine)"),
+        ("/sarms/rad-140.html", "RAD-140 (Testolone)"),
+    ]),
+    ("/peptides.html", "Peptides", [
+        ("/peptides/bpc-157.html", "BPC-157"),
+        ("/peptides/semaglutide.html", "Semaglutide"),
+        ("/peptides/tb-500.html", "TB-500"),
+    ]),
+    ("/nootropics.html", "Nootropics", [
+        ("/nootropics/adrafinil.html", "Adrafinil"),
+        ("/nootropics/cyclazodone.html", "Cyclazodone"),
+        ("/nootropics/flmodafinil.html", "Flmodafinil"),
+        ("/nootropics/phenylpiracetam.html", "Phenylpiracetam"),
+    ]),
+    ("/guides.html", "Guides", []),
+    ("/about.html", "About", []),
+    ("/contact.html", "Contact", []),
 ]
 
 # --- Icons ----------------------------------------------------------------
@@ -66,12 +80,44 @@ def social_links() -> str:
 
 
 def nav_links(current: str) -> str:
+    """Render the main navigation, including dropdowns.
+
+    Each dropdown is a real button with aria-expanded rather than a
+    hover-only menu: hover alone is unusable on touch and unreachable by
+    keyboard. CSS opens the panel on hover and on :focus-within so it still
+    works with JavaScript disabled; script.js manages the button state.
+    """
     out = []
-    for href, label in NAV:
-        # aria-current marks the page being viewed for assistive technology,
-        # and the stylesheet keys the active underline off the same attribute.
-        cur = ' aria-current="page"' if href == current else ""
-        out.append(f'\t\t\t<a href="{href}"{cur}>{label}</a>')
+    for href, label, children in NAV:
+        # A parent is "current" when its own page or any child page is open.
+        active = href == current or any(c == current for c, _ in children)
+        cur = ' aria-current="page"' if active else ""
+
+        if not children:
+            out.append(f'\t\t\t<a href="{href}"{cur}>{label}</a>')
+            continue
+
+        menu_id = "menu-" + label.lower().replace(" ", "-")
+        rows = []
+        for c_href, c_label in children:
+            # Built outside the f-string: expressions cannot contain
+            # backslashes, and this needs escaped quotes.
+            c_cur = ' aria-current="page"' if c_href == current else ''
+            rows.append(
+                f'\t\t\t\t\t<li><a href="{c_href}"{c_cur}>{c_label}</a></li>'
+            )
+        items = "\n".join(rows)
+        out.append(
+            f'\t\t\t<div class="navitem">\n'
+            f'\t\t\t\t<a href="{href}"{cur}>{label}</a>\n'
+            f'\t\t\t\t<button class="navitem__toggle" aria-expanded="false"\n'
+            f'\t\t\t\t        aria-controls="{menu_id}">\n'
+            f'\t\t\t\t\t<span class="sr-only">Show {label} pages</span>\n'
+            f'\t\t\t\t\t<span class="navitem__chevron" aria-hidden="true"></span>\n'
+            f'\t\t\t\t</button>\n'
+            f'\t\t\t\t<ul class="submenu" id="{menu_id}">\n{items}\n\t\t\t\t</ul>\n'
+            f'\t\t\t</div>'
+        )
     return "\n".join(out)
 
 
@@ -578,19 +624,463 @@ def main() -> None:
 
     write("sarms.html", "SARMs",
           "Reference material on selective androgen receptor modulators as laboratory "
-          "research compounds. For research use only.", SARMS)
+          "research compounds. For research use only.",
+          with_compounds(SARMS, "/sarms.html"))
 
     write("peptides.html", "Peptides",
           "Research peptide reference material: sequences, reconstitution, cold-chain "
-          "handling and stability. For research use only.", PEPTIDES)
+          "handling and stability. For research use only.",
+          with_compounds(PEPTIDES, "/peptides.html"))
 
     write("nootropics.html", "Nootropics",
           "Reference material on nootropic research compounds, with an explicit account "
-          "of where the published evidence is thin.", NOOTROPICS)
+          "of where the published evidence is thin.",
+          with_compounds(NOOTROPICS, "/nootropics.html"))
 
     write("404.html", "Page not found",
           "The page you were looking for does not exist.", NOT_FOUND)
 
+    build_compound_pages()
+
+
+
+# --------------------------------------------------------------------------
+# Individual compound pages
+# --------------------------------------------------------------------------
+#
+# Identifiers (CAS, formula, molecular weight) are deliberately left as
+# placeholders. This is a reference site: a wrong CAS number sends someone
+# after the wrong material, which is worse than an obvious blank. Fill each
+# one in from the certificate of analysis for the batch you hold, and the
+# blank makes it plain which pages are still unverified.
+
+SPEC_FIELDS = [
+    ("CAS number", "[CAS]"),
+    ("Molecular formula", "[FORMULA]"),
+    ("Molecular weight", "[MW] g/mol"),
+    ("Physical form", "[FORM]"),
+    ("Purity", "[PURITY]% by HPLC"),
+    ("Storage", "[STORAGE]"),
+]
+
+
+def spec_table() -> str:
+    rows = "\n".join(
+        f"\t\t\t\t\t\t<tr><th scope=\"row\">{k}</th><td>{v}</td></tr>"
+        for k, v in SPEC_FIELDS
+    )
+    return f"""\t\t\t\t<div class="table-scroll">
+\t\t\t\t\t<table class="spec-table">
+\t\t\t\t\t\t<tbody>
+{rows}
+\t\t\t\t\t\t</tbody>
+\t\t\t\t\t</table>
+\t\t\t\t</div>"""
+
+
+def compound_page(name: str, parent_label: str, parent_href: str,
+                  summary: str, body: str, image: str, alt: str) -> str:
+    """A single compound reference page."""
+    return f"""\t<section class="section section--tight">
+\t\t<div class="wrap">
+\t\t\t<nav class="crumbs" aria-label="Breadcrumb">
+\t\t\t\t<a href="/">Home</a>
+\t\t\t\t<span aria-hidden="true">/</span>
+\t\t\t\t<a href="{parent_href}">{parent_label}</a>
+\t\t\t\t<span aria-hidden="true">/</span>
+\t\t\t\t<span aria-current="page">{name}</span>
+\t\t\t</nav>
+
+\t\t\t<div class="sectionhead">
+\t\t\t\t<p class="eyebrow">{parent_label}</p>
+\t\t\t\t<h1>{name}</h1>
+\t\t\t\t<p class="lede">{summary}</p>
+\t\t\t</div>
+
+\t\t\t<div class="two-col">
+\t\t\t\t<div class="measure prose">
+{body}
+\t\t\t\t</div>
+\t\t\t\t<div>
+\t\t\t\t\t<div class="figure" style="margin-bottom:1.5rem">
+\t\t\t\t\t\t<img src="/assets/{image}" alt="{alt}" width="1600" height="1067"
+\t\t\t\t\t\t     loading="lazy" decoding="async">
+\t\t\t\t\t</div>
+\t\t\t\t\t<h2 class="h-sm">Specification</h2>
+{spec_table()}
+\t\t\t\t\t<p class="note-sm">Values in brackets are unverified. Confirm each
+\t\t\t\t\tagainst the certificate of analysis for the batch you hold.</p>
+\t\t\t\t</div>
+\t\t\t</div>
+\t\t</div>
+\t</section>
+
+{NOTICE}
+\t<section class="cta">
+\t\t<div class="wrap">
+\t\t\t<div class="cta__panel">
+\t\t\t\t<h2>Spotted an error?</h2>
+\t\t\t\t<p>If something here is wrong or out of date, tell us. Corrections are
+\t\t\t\tpublished with a note describing what changed.</p>
+\t\t\t\t<div class="btnrow btnrow--center">
+\t\t\t\t\t<a class="btn btn--primary" href="/contact.html">Get in touch</a>
+\t\t\t\t\t<a class="btn btn--light" href="{parent_href}">All {parent_label}</a>
+\t\t\t\t</div>
+\t\t\t</div>
+\t\t</div>
+\t</section>
+"""
+
+
+# Body copy per compound. Each describes the material and the state of the
+# published record. None describes effects in people, recommends use, or
+# gives dosing — that would turn a reference page into a drug claim.
+COMPOUNDS = {
+    "sarms/gw-501516.html": dict(
+        name="GW-501516 (Cardarine)", parent_label="SARMs", parent_href="/sarms.html",
+        title="GW-501516",
+        summary="A PPAR&delta; agonist, frequently grouped with SARMs although it acts "
+                "on a different receptor family entirely.",
+        image="ampoules-microscope.jpg",
+        alt="Amber and clear glass ampoules on a bench in front of a microscope",
+        body="""\t\t\t\t\t<h2>What it is</h2>
+\t\t\t\t\t<p>GW-501516 is an agonist at the peroxisome proliferator-activated
+\t\t\t\t\treceptor delta (PPAR&delta;), a nuclear receptor involved in lipid
+\t\t\t\t\tmetabolism. It is routinely listed alongside SARMs by suppliers, but
+\t\t\t\t\tit is not a selective androgen receptor modulator and does not act on
+\t\t\t\t\tthe androgen receptor. Treating the two classes as interchangeable is
+\t\t\t\t\ta common and consequential error.</p>
+
+\t\t\t\t\t<h2>Development history</h2>
+\t\t\t\t\t<p>The compound was investigated in the early 2000s and development
+\t\t\t\t\twas discontinued. Published rodent carcinogenicity findings are the
+\t\t\t\t\tusually cited reason. Any honest write-up has to lead with that
+\t\t\t\t\trather than bury it, and we would rather you read it here than
+\t\t\t\t\tdiscover it later.</p>
+
+\t\t\t\t\t<h2>Regulatory status</h2>
+\t\t\t\t\t<p>It is not approved for human or veterinary use in any jurisdiction
+\t\t\t\t\twe are aware of, and it appears on the World Anti-Doping Agency
+\t\t\t\t\tprohibited list.</p>
+
+\t\t\t\t\t<h2>Handling</h2>
+\t\t\t\t\t<p>Confirm physical form, solubility and storage against the
+\t\t\t\t\tcertificate of analysis for your batch. Solubility differs
+\t\t\t\t\tsubstantially between the free acid and salt forms, which is a
+\t\t\t\t\tfrequent source of preparation error.</p>"""),
+
+    "sarms/mk-2866.html": dict(
+        name="MK-2866 (Ostarine)", parent_label="SARMs", parent_href="/sarms.html",
+        title="MK-2866",
+        summary="One of the most extensively studied SARMs, and the one with the "
+                "largest published clinical record.",
+        image="ampoules-bench.jpg",
+        alt="Amber glass ampoules on a laboratory bench beside a microscope",
+        body="""\t\t\t\t\t<h2>What it is</h2>
+\t\t\t\t\t<p>MK-2866 is a non-steroidal selective androgen receptor modulator.
+\t\t\t\t\tSARMs bind the androgen receptor with tissue selectivity that differs
+\t\t\t\t\tfrom steroidal androgens, which is the property the class was
+\t\t\t\t\tdeveloped to exploit.</p>
+
+\t\t\t\t\t<h2>Published record</h2>
+\t\t\t\t\t<p>It has been through clinical trials, which makes its record
+\t\t\t\t\tunusually substantial for this class &mdash; most SARMs have only
+\t\t\t\t\tpreclinical data behind them. Development did not lead to approval.</p>
+\t\t\t\t\t<p>Being better studied than its peers is a low bar, and it should not
+\t\t\t\t\tbe read as an established safety profile.</p>
+
+\t\t\t\t\t<h2>Regulatory status</h2>
+\t\t\t\t\t<p>Not approved for human or veterinary use. Prohibited in sport under
+\t\t\t\t\tthe WADA code, and a recurring cause of adverse findings in athlete
+\t\t\t\t\ttesting &mdash; often through contaminated supplements rather than
+\t\t\t\t\tdeliberate use.</p>
+
+\t\t\t\t\t<h2>Handling</h2>
+\t\t\t\t\t<p>Verify identity and purity against your certificate of analysis.
+\t\t\t\t\tMislabelling is well documented across this product category, so the
+\t\t\t\t\tcertificate matters more here than the label does.</p>"""),
+
+    "sarms/rad-140.html": dict(
+        name="RAD-140 (Testolone)", parent_label="SARMs", parent_href="/sarms.html",
+        title="RAD-140",
+        summary="A non-steroidal SARM whose published record is preclinical, with "
+                "notably less human data than MK-2866.",
+        image="lab-pipetting.jpg",
+        alt="Researcher in gloves transferring a sample into a tube rack",
+        body="""\t\t\t\t\t<h2>What it is</h2>
+\t\t\t\t\t<p>RAD-140 is a non-steroidal selective androgen receptor modulator
+\t\t\t\t\tinvestigated in preclinical work, including studies in animal models
+\t\t\t\t\tof muscle wasting and, separately, hormone-receptor-positive breast
+\t\t\t\t\tcancer.</p>
+
+\t\t\t\t\t<h2>State of the evidence</h2>
+\t\t\t\t\t<p>The published record is thinner than for MK-2866 and largely
+\t\t\t\t\tpreclinical. Case reports of liver injury associated with products
+\t\t\t\t\tsold as RAD-140 exist in the literature; because those products were
+\t\t\t\t\tnot independently characterised, whether the compound or a
+\t\t\t\t\tcontaminant was responsible generally cannot be established.</p>
+\t\t\t\t\t<p>That ambiguity is itself the point. Without analytical
+\t\t\t\t\tcharacterisation you cannot attribute an outcome to a compound at
+\t\t\t\t\tall.</p>
+
+\t\t\t\t\t<h2>Regulatory status</h2>
+\t\t\t\t\t<p>Not approved for human or veterinary use anywhere we are aware of,
+\t\t\t\t\tand prohibited in sport under the WADA code.</p>
+
+\t\t\t\t\t<h2>Handling</h2>
+\t\t\t\t\t<p>Confirm form, solubility and storage against your certificate of
+\t\t\t\t\tanalysis before preparing anything.</p>"""),
+
+    "peptides/bpc-157.html": dict(
+        name="BPC-157", parent_label="Peptides", parent_href="/peptides.html",
+        title="BPC-157",
+        summary="A synthetic pentadecapeptide studied in animal models, with almost "
+                "no published human data.",
+        image="lab-pipetting.jpg",
+        alt="Researcher in gloves transferring a sample into a tube rack",
+        body="""\t\t\t\t\t<h2>What it is</h2>
+\t\t\t\t\t<p>BPC-157 is a synthetic peptide of fifteen amino acids, derived from
+\t\t\t\t\ta sequence identified in gastric juice. It is supplied lyophilised and
+\t\t\t\t\trequires reconstitution before use.</p>
+
+\t\t\t\t\t<h2>State of the evidence</h2>
+\t\t\t\t\t<p>The published literature is almost entirely preclinical, and a
+\t\t\t\t\tlarge share of it comes from a small number of research groups. That
+\t\t\t\t\tconcentration matters: findings replicated only within one group are
+\t\t\t\t\tweaker evidence than the raw publication count suggests.</p>
+\t\t\t\t\t<p>Controlled human data is minimal. Claims circulating outside the
+\t\t\t\t\tliterature considerably outrun what has actually been demonstrated.</p>
+
+\t\t\t\t\t<h2>Handling and stability</h2>
+\t\t\t\t\t<p>Store lyophilised material cold and protected from light.
+\t\t\t\t\tReconstituted peptide is markedly less stable than the lyophilised
+\t\t\t\t\tform, and repeated freeze-thaw cycling degrades it. Record the
+\t\t\t\t\treconstitution date &mdash; a peptide is not the same material three
+\t\t\t\t\tweeks later.</p>
+
+\t\t\t\t\t<h2>Regulatory status</h2>
+\t\t\t\t\t<p>Not an approved medicine. In 2023 the FDA placed it in a category
+\t\t\t\t\tof substances barred from compounding pending further evaluation.</p>"""),
+
+    "peptides/semaglutide.html": dict(
+        name="Semaglutide", parent_label="Peptides", parent_href="/peptides.html",
+        title="Semaglutide",
+        summary="A GLP-1 receptor agonist. Unlike most compounds catalogued here, "
+                "approved medicines containing it exist.",
+        image="ampoules-microscope.jpg",
+        alt="Amber and clear glass ampoules on a bench in front of a microscope",
+        body="""\t\t\t\t\t<h2>What it is</h2>
+\t\t\t\t\t<p>Semaglutide is a glucagon-like peptide-1 receptor agonist: a
+\t\t\t\t\tmodified peptide engineered for a substantially longer half-life than
+\t\t\t\t\tnative GLP-1.</p>
+
+\t\t\t\t\t<h2>An important distinction</h2>
+\t\t\t\t\t<p>Approved prescription medicines containing semaglutide exist, which
+\t\t\t\t\tmakes this page different from the others here. Those medicines are
+\t\t\t\t\tregulated products with established manufacturing, and material sold
+\t\t\t\t\tas a research chemical is not equivalent to them in any respect that
+\t\t\t\t\tmatters &mdash; not purity, not sterility, not fill accuracy.</p>
+\t\t\t\t\t<p>Research-grade material is not a substitute for a prescribed
+\t\t\t\t\tmedicine, and nothing on this page should be read as suggesting
+\t\t\t\t\totherwise. Compounded and grey-market semaglutide has been the subject
+\t\t\t\t\tof repeated regulatory warnings, including dosing errors traced to
+\t\t\t\t\tunlabelled concentration differences.</p>
+
+\t\t\t\t\t<h2>Handling and stability</h2>
+\t\t\t\t\t<p>Peptides of this size are sensitive to temperature and to
+\t\t\t\t\tagitation. Follow the storage conditions on your certificate of
+\t\t\t\t\tanalysis, and treat cold-chain excursions as affecting the
+\t\t\t\t\tspecification rather than as a formality.</p>"""),
+
+    "peptides/tb-500.html": dict(
+        name="TB-500", parent_label="Peptides", parent_href="/peptides.html",
+        title="TB-500",
+        summary="A synthetic fragment related to thymosin beta-4, supplied "
+                "lyophilised.",
+        image="capsule-selection.jpg",
+        alt="Gloved hands using tweezers to place a capsule into a sample pot",
+        body="""\t\t\t\t\t<h2>What it is</h2>
+\t\t\t\t\t<p>TB-500 is a synthetic peptide corresponding to an active region of
+\t\t\t\t\tthymosin beta-4, a naturally occurring protein involved in actin
+\t\t\t\t\tregulation. It is a fragment, not the full protein &mdash; a
+\t\t\t\t\tdistinction frequently lost in product descriptions, and one that
+\t\t\t\t\tmatters when comparing against literature on thymosin beta-4
+\t\t\t\t\titself.</p>
+
+\t\t\t\t\t<h2>State of the evidence</h2>
+\t\t\t\t\t<p>Published work is preclinical. Studies on full-length thymosin
+\t\t\t\t\tbeta-4 are sometimes cited as though they establish something about
+\t\t\t\t\tthe fragment; they do not, and conflating them overstates the
+\t\t\t\t\tevidence.</p>
+
+\t\t\t\t\t<h2>Handling and stability</h2>
+\t\t\t\t\t<p>Supplied lyophilised and requiring reconstitution. Store cold,
+\t\t\t\t\tprotect from light, and avoid repeated freeze-thaw cycles.
+\t\t\t\t\tReconstituted material has a considerably shorter usable life than
+\t\t\t\t\tthe lyophilised powder.</p>
+
+\t\t\t\t\t<h2>Regulatory status</h2>
+\t\t\t\t\t<p>Not approved for human or veterinary use, and prohibited in sport
+\t\t\t\t\tunder the WADA code.</p>"""),
+
+    "nootropics/adrafinil.html": dict(
+        name="Adrafinil", parent_label="Nootropics", parent_href="/nootropics.html",
+        title="Adrafinil",
+        summary="A prodrug that metabolises to modafinil, with a correspondingly "
+                "different pharmacokinetic profile.",
+        image="capsule-selection.jpg",
+        alt="Gloved hands using tweezers to place a capsule into a sample pot",
+        body="""\t\t\t\t\t<h2>What it is</h2>
+\t\t\t\t\t<p>Adrafinil is a prodrug: it is metabolised in the liver to
+\t\t\t\t\tmodafinil, which is the active compound. It was developed in France
+\t\t\t\t\tin the 1970s and later withdrawn from the market there.</p>
+
+\t\t\t\t\t<h2>Why the prodrug relationship matters</h2>
+\t\t\t\t\t<p>Because conversion happens in the liver, the compound places a
+\t\t\t\t\tmetabolic load that modafinil itself does not. Studies on modafinil
+\t\t\t\t\tdo not transfer cleanly to adrafinil for that reason, and treating
+\t\t\t\t\tthe two as equivalent misreads both.</p>
+
+\t\t\t\t\t<h2>Regulatory status</h2>
+\t\t\t\t\t<p>Not an approved medicine in the United States. Modafinil, its
+\t\t\t\t\tmetabolite, is a prescription medicine and a controlled substance
+\t\t\t\t\tthere &mdash; a distinction worth understanding before ordering
+\t\t\t\t\teither.</p>
+
+\t\t\t\t\t<h2>Handling</h2>
+\t\t\t\t\t<p>Supplied as a powder. Confirm purity and identity against the
+\t\t\t\t\tcertificate of analysis for your batch.</p>"""),
+
+    "nootropics/cyclazodone.html": dict(
+        name="Cyclazodone", parent_label="Nootropics", parent_href="/nootropics.html",
+        title="Cyclazodone",
+        summary="A substituted aminorex derivative with a notably thin published "
+                "record.",
+        image="capsule-selection.jpg",
+        alt="Gloved hands using tweezers to place a capsule into a sample pot",
+        body="""\t\t\t\t\t<h2>What it is</h2>
+\t\t\t\t\t<p>Cyclazodone is a derivative of aminorex, related structurally to
+\t\t\t\t\tpemoline. It belongs to a family of stimulant compounds, several of
+\t\t\t\t\twhich were withdrawn from medical use.</p>
+
+\t\t\t\t\t<h2>State of the evidence</h2>
+\t\t\t\t\t<p>The published record is very thin. There is little peer-reviewed
+\t\t\t\t\tpharmacology, essentially no controlled human data, and no
+\t\t\t\t\testablished safety profile.</p>
+\t\t\t\t\t<p>We state that plainly because an absence of evidence is the most
+\t\t\t\t\tuseful thing we can tell you about this compound. Related compounds in
+\t\t\t\t\tthe same family have documented hepatotoxicity, which is a reason for
+\t\t\t\t\tcaution in interpreting the silence rather than comfort.</p>
+
+\t\t\t\t\t<h2>Handling</h2>
+\t\t\t\t\t<p>Verify identity and purity analytically. For compounds this poorly
+\t\t\t\t\tcharacterised, a certificate of analysis is the only meaningful
+\t\t\t\t\tevidence of what you actually have.</p>"""),
+
+    "nootropics/flmodafinil.html": dict(
+        name="Flmodafinil", parent_label="Nootropics", parent_href="/nootropics.html",
+        title="Flmodafinil",
+        summary="A fluorinated modafinil analogue, also written CRL-40,940 and "
+                "bisfluoromodafinil.",
+        image="ampoules-bench.jpg",
+        alt="Amber glass ampoules on a laboratory bench beside a microscope",
+        body="""\t\t\t\t\t<h2>What it is</h2>
+\t\t\t\t\t<p>Flmodafinil is a modafinil analogue carrying fluorine substitutions
+\t\t\t\t\ton the aromatic rings. It appears in the literature and in product
+\t\t\t\t\tlistings under several names &mdash; CRL-40,940, bisfluoromodafinil,
+\t\t\t\t\tlauflumide &mdash; which makes searching for it unusually
+\t\t\t\t\tawkward.</p>
+
+\t\t\t\t\t<h2>State of the evidence</h2>
+\t\t\t\t\t<p>Published pharmacology is limited. Claims about how it compares to
+\t\t\t\t\tmodafinil circulate widely but rest on very little published work, and
+\t\t\t\t\tstructural similarity is not evidence of comparable behaviour.</p>
+
+\t\t\t\t\t<h2>Naming and identity</h2>
+\t\t\t\t\t<p>Because several names are in use, verify identity by CAS number and
+\t\t\t\t\tanalytical data rather than by the name on the label. This is the
+\t\t\t\t\tcompound most likely in this catalogue to arrive as something other
+\t\t\t\t\tthan what was ordered.</p>
+
+\t\t\t\t\t<h2>Handling</h2>
+\t\t\t\t\t<p>Supplied as a powder. Confirm purity and storage conditions against
+\t\t\t\t\tyour certificate of analysis.</p>"""),
+
+    "nootropics/phenylpiracetam.html": dict(
+        name="Phenylpiracetam", parent_label="Nootropics", parent_href="/nootropics.html",
+        title="Phenylpiracetam",
+        summary="A phenylated racetam developed in the Soviet Union, with much of "
+                "its literature published in Russian.",
+        image="lab-pipetting.jpg",
+        alt="Researcher in gloves transferring a sample into a tube rack",
+        body="""\t\t\t\t\t<h2>What it is</h2>
+\t\t\t\t\t<p>Phenylpiracetam is a member of the racetam family, structurally
+\t\t\t\t\tpiracetam with a phenyl group added. It was developed in the Soviet
+\t\t\t\t\tUnion and has been used medically in some post-Soviet states.</p>
+
+\t\t\t\t\t<h2>Reading the literature</h2>
+\t\t\t\t\t<p>Much of the published work is in Russian and predates current
+\t\t\t\t\ttrial-reporting standards. That does not make it worthless, but it
+\t\t\t\t\tdoes mean the evidence base is harder to appraise than a raw citation
+\t\t\t\t\tcount suggests &mdash; and English-language summaries of it are often
+\t\t\t\t\tmore confident than the underlying papers.</p>
+
+\t\t\t\t\t<h2>Stereochemistry</h2>
+\t\t\t\t\t<p>The compound is chiral and is usually supplied as a racemic
+\t\t\t\t\tmixture. Where a supplier claims a single enantiomer, that claim needs
+\t\t\t\t\tanalytical support, because the two are not interchangeable.</p>
+
+\t\t\t\t\t<h2>Regulatory status</h2>
+\t\t\t\t\t<p>Not an approved medicine in the United States or European Union.
+\t\t\t\t\tProhibited in sport under the WADA code.</p>"""),
+}
+
+
+def compound_list(parent_href: str) -> str:
+    """Links to every compound page under a topic, for the topic page itself.
+
+    A dropdown is not a substitute for links in the page body: it is invisible
+    to anyone who arrives from search, and search engines follow body links
+    more reliably than JavaScript-adjacent menus.
+    """
+    entries = [(href, cfg) for href, cfg in COMPOUNDS.items()
+               if cfg["parent_href"] == parent_href]
+    cards = "\n".join(
+        f"""\t\t\t\t<article class="card">
+\t\t\t\t\t<h3><a href="/{href}">{cfg['name']}</a></h3>
+\t\t\t\t\t<p class="mb-0">{cfg['summary']}</p>
+\t\t\t\t</article>""" for href, cfg in entries
+    )
+    return f"""\t<section class="section section--tight">
+\t\t<div class="wrap">
+\t\t\t<div class="sectionhead">
+\t\t\t\t<h2>Compounds in this section</h2>
+\t\t\t</div>
+\t\t\t<div class="cards">
+{cards}
+\t\t\t</div>
+\t\t</div>
+\t</section>
+
+"""
+
+
+def with_compounds(topic_html: str, parent_href: str) -> str:
+    """Insert the compound list ahead of the research-use-only notice."""
+    return topic_html.replace(NOTICE, compound_list(parent_href) + NOTICE, 1)
+
+
+def build_compound_pages() -> None:
+    for path, cfg in COMPOUNDS.items():
+        (SITE / path).parent.mkdir(parents=True, exist_ok=True)
+        body = compound_page(
+            name=cfg["name"], parent_label=cfg["parent_label"],
+            parent_href=cfg["parent_href"], summary=cfg["summary"],
+            body=cfg["body"], image=cfg["image"], alt=cfg["alt"],
+        )
+        write(path, cfg["title"],
+              f"{cfg['name']}: identity, handling and the state of the published "
+              f"record. Laboratory research use only.", body)
 
 if __name__ == "__main__":
     main()
