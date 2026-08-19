@@ -346,10 +346,12 @@ def write(path: str, title: str, description: str, body: str,
 ABOUT = """\t<section class="section">
 \t\t<div class="wrap">
 \t\t\t<div class="sectionhead">
-\t\t\t\t<p class="eyebrow">About</p>
-\t\t\t\t<h1>Who we are and how we work</h1>
-\t\t\t\t<p class="lede">We publish reference material on research compounds for
-\t\t\t\tpeople who read the methods section first.</p>
+\t\t\t\t<p class="eyebrow">About us</p>
+\t\t\t\t<h1>About Research Lab USA</h1>
+\t\t\t\t<p class="lede">We publish reference material on research compounds
+\t\t\t\tfor people who read the methods section first &mdash; researchers,
+\t\t\t\tlaboratory staff, and anyone who would rather see the evidence than
+\t\t\t\tbe told a conclusion.</p>
 \t\t\t</div>
 \t\t</div>
 \t</section>
@@ -357,31 +359,56 @@ ABOUT = """\t<section class="section">
 \t<section class="section section--tight">
 \t\t<div class="wrap two-col">
 \t\t\t<div class="measure prose">
-\t\t\t\t<h2>Why we publish</h2>
-\t\t\t\t<p>Most writing about research compounds falls into one of two camps:
-\t\t\t\ttoo thin to act on, or written to rank in search rather than to inform.
-\t\t\t\tWe started publishing to fill the gap in between &mdash; material
-\t\t\t\tdetailed enough to be useful, written plainly enough to be read.</p>
+\t\t\t\t<h2>Our purpose</h2>
+\t\t\t\t<p>Sourcing information about research compounds is harder than it
+\t\t\t\tshould be. Supplier pages read like advertising, forum threads
+\t\t\t\tcontradict each other, and the primary literature is often behind a
+\t\t\t\tpaywall or written for specialists. What sits in between is mostly
+\t\t\t\twritten to rank in search results rather than to be useful.</p>
+\t\t\t\t<p>We started publishing to fill that gap: material detailed enough
+\t\t\t\tto act on, written plainly enough to read, and honest about the
+\t\t\t\tconsiderable amount that remains unknown.</p>
+
+\t\t\t\t<h2>What we are working towards</h2>
+\t\t\t\t<p>A reference that researchers reach for first, and trust because it
+\t\t\t\ttells them when the evidence is weak rather than only when it is
+\t\t\t\tstrong. Every guide is built to answer three questions: what is this
+\t\t\t\tmaterial, how should it be handled, and what has actually been
+\t\t\t\tshown about it.</p>
+\t\t\t\t<p>An absence of evidence is a finding in its own right, and it is
+\t\t\t\tstated as clearly as a positive result.</p>
+
+\t\t\t\t<h2>Who writes this</h2>
+\t\t\t\t<p>[Describe your team here: who they are, their background, and the
+\t\t\t\tdisciplines they work in &mdash; for example pharmacology, analytical
+\t\t\t\tchemistry, molecular biology or laboratory practice. Name real people
+\t\t\t\tand real qualifications where you can.]</p>
+\t\t\t\t<p class="notice">
+\t\t\t\t\t<strong>Fill this section in before launch.</strong> Claims about
+\t\t\t\t\texpertise are the first thing a careful reader checks, and an
+\t\t\t\t\tunsupported one costs more credibility than saying nothing. If
+\t\t\t\t\tthere is no team yet, describe how the material is researched
+\t\t\t\t\tinstead &mdash; that is verifiable, and it answers the same
+\t\t\t\t\tquestion.
+\t\t\t\t</p>
 
 \t\t\t\t<h2>How we write</h2>
-\t\t\t\t<p>Every guide states what is known, where that knowledge comes from,
-\t\t\t\tand what remains unresolved. Claims are linked to the study behind
-\t\t\t\tthem so you can check the original rather than take our word for it.</p>
-\t\t\t\t<p>Where the evidence is thin or contested, we say so. Rounding an
-\t\t\t\topen question up to a confident answer is the most common failure in
-\t\t\t\tthis subject area, and it is the one we work hardest to avoid.</p>
+\t\t\t\t<p>Claims are tied to the study behind them, so you can read the
+\t\t\t\toriginal rather than take our word for it. Where findings come from a
+\t\t\t\tsingle research group, or have never been independently replicated,
+\t\t\t\twe say so &mdash; a citation count is not the same as a body of
+\t\t\t\tevidence.</p>
+\t\t\t\t<p>We describe materials, not outcomes in people. Chemical identity,
+\t\t\t\tpurity, physical form, solubility and storage are all fair game.
+\t\t\t\tWhat a compound does in a human body is not something we assert,
+\t\t\t\tbecause for almost everything catalogued here nobody reliably
+\t\t\t\tknows.</p>
 
 \t\t\t\t<h2>Corrections</h2>
 \t\t\t\t<p>When something turns out to be wrong, the page is updated with a
-\t\t\t\tdated note describing what changed and why. We do not quietly edit
-\t\t\t\tpages and leave no trace &mdash; if you relied on an earlier version,
-\t\t\t\tyou deserve to know it changed.</p>
-
-\t\t\t\t<h2>What we do not do</h2>
-\t\t\t\t<p>We do not provide dosing guidance, protocols for human use, or
-\t\t\t\tadvice on obtaining materials for personal use. Everything here is
-\t\t\t\twritten for laboratory research by qualified professionals, and we
-\t\t\t\tcannot answer questions that fall outside that.</p>
+\t\t\t\tdated note describing what changed and why. Pages are not quietly
+\t\t\t\tedited: if you relied on an earlier version, you should be able to
+\t\t\t\tsee that it changed.</p>
 \t\t\t</div>
 \t\t\t<div class="figure">
 \t\t\t\t<img src="/assets/lab-pipetting.jpg"
@@ -391,14 +418,68 @@ ABOUT = """\t<section class="section">
 \t\t</div>
 \t</section>
 
+\t<section class="section section--alt">
+\t\t<div class="wrap">
+\t\t\t<div class="sectionhead sectionhead--center">
+\t\t\t\t<p class="eyebrow eyebrow--center">What you will find here</p>
+\t\t\t\t<h2>Four things we try to get right</h2>
+\t\t\t</div>
+\t\t\t<div class="cards">
+\t\t\t\t<article class="card">
+\t\t\t\t\t<h3>Sourced material</h3>
+\t\t\t\t\t<p class="mb-0">Guides built from published work, with each claim
+\t\t\t\t\tlinked to the study behind it so you can check the original.</p>
+\t\t\t\t</article>
+\t\t\t\t<article class="card">
+\t\t\t\t\t<h3>Handling detail</h3>
+\t\t\t\t\t<p class="mb-0">Storage, solubility and preparation written out in
+\t\t\t\t\tfull, including the steps that get left off because they seem
+\t\t\t\t\tobvious to whoever wrote them down.</p>
+\t\t\t\t</article>
+\t\t\t\t<article class="card">
+\t\t\t\t\t<h3>Stated uncertainty</h3>
+\t\t\t\t\t<p class="mb-0">Where the record is thin, contested, or rests on one
+\t\t\t\t\tgroup's work, that appears at the top of the page rather than
+\t\t\t\t\tburied at the bottom.</p>
+\t\t\t\t</article>
+\t\t\t\t<article class="card">
+\t\t\t\t\t<h3>Verification first</h3>
+\t\t\t\t\t<p class="mb-0">How to read a certificate of analysis and what
+\t\t\t\t\tbatch traceability should look like &mdash; because mislabelling is
+\t\t\t\t\twell documented across this whole product category.</p>
+\t\t\t\t</article>
+\t\t\t</div>
+\t\t</div>
+\t</section>
+
+\t<section class="section section--tight">
+\t\t<div class="wrap">\n\t\t\t<div class="measure prose">
+\t\t\t<h2>Why read us rather than a supplier page</h2>
+\t\t\t<p>A supplier has an interest in the answer. We would rather tell you
+\t\t\tthat a compound is poorly characterised, that its development was
+\t\t\tdiscontinued, or that the enthusiasm around it outruns the published
+\t\t\twork &mdash; all of which appear on pages here.</p>
+\t\t\t<p>That is the whole proposition. A reference that only ever sounds
+\t\t\tpositive is not a reference.</p>
+
+\t\t\t<h2>Get in touch</h2>
+\t\t\t<p>Corrections, questions and suggestions for what to cover next are all
+\t\t\twelcome, and corrections get published. Reach us at
+\t\t\t<a href="mailto:""" + EMAIL + """">""" + EMAIL + """</a> or through the
+\t\t\t<a href="/contact.html">contact page</a>.</p>
+\t\t\t</div>
+\t\t</div>
+\t</section>
+
 """ + NOTICE + """
 \t<section class="cta">
 \t\t<div class="wrap">
 \t\t\t<div class="cta__panel">
 \t\t\t\t<h2>Found something wrong?</h2>
-\t\t\t\t<p>Corrections are genuinely welcome, and they get published.</p>
+\t\t\t\t<p>Tell us and it gets fixed, with a note saying what changed.</p>
 \t\t\t\t<div class="btnrow btnrow--center">
-\t\t\t\t\t<a class="btn btn--primary" href="/contact.html">Tell us</a>
+\t\t\t\t\t<a class="btn btn--primary" href="/contact.html">Contact us</a>
+\t\t\t\t\t<a class="btn btn--light" href="/guides.html">Browse the guides</a>
 \t\t\t\t</div>
 \t\t\t</div>
 \t\t</div>
