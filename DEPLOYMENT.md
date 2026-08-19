@@ -1,177 +1,114 @@
-# Deploying to SiteGround (auto-deploy on every push)
+# Deploying to SiteGround
 
-This repo auto-deploys your WordPress custom code (`wp-content/`) to your
-SiteGround hosting for **https://researchlabusa.com/** every time you push to
-the `main` branch, using GitHub Actions + rsync over SSH.
+Every push to `main` publishes the site to SiteGround. You can also run it on
+demand from the repository's **Actions** tab (*Deploy to SiteGround* → **Run
+workflow**).
 
-The deploy is **non-destructive**: it uploads and updates the files tracked in
-this repo but never deletes anything already on your live server. Your
-database, uploads, WordPress core, and admin-installed plugins are untouched.
-
----
-
-## One-time setup
-
-You do this once. After that, every `git push` to `main` deploys automatically.
-
-### Step 1 — Create a passphrase-free key and register it with SiteGround
-
-> **Important:** SiteGround's own key generator *requires* a passphrase, and
-> GitHub Actions cannot type a passphrase — a passphrase-protected key fails
-> with `incorrect passphrase supplied to decrypt private key`. So generate the
-> key locally without one and import its public half into SiteGround.
-
-1. On your computer, generate a key pair with an empty passphrase (`-N ""`):
-   ```
-   ssh-keygen -t ed25519 -f %USERPROFILE%\.ssh\siteground_deploy -N ""
-   ```
-   (macOS/Linux: `ssh-keygen -t ed25519 -f ~/.ssh/siteground_deploy -N ""`)
-
-   This writes two files: `siteground_deploy` (**private**) and
-   `siteground_deploy.pub` (**public**).
-
-2. Print the **public** key and copy the whole line:
-   ```
-   type %USERPROFILE%\.ssh\siteground_deploy.pub
-   ```
-
-3. In SiteGround: **Site Tools → Devs → SSH Keys Manager → Import** (or *Add
-   existing key*) → paste the **public** key → save.
-
-4. Keep the **private** key (`siteground_deploy`, no `.pub`) for Step 3 — it
-   goes into the GitHub secret, and nowhere else.
-
-> **Already generated a key in SiteGround?** You don't have to start over —
-> just strip the passphrase off it. Save the private key to a file, then run
-> `ssh-keygen -p -f <keyfile> -N ""` and enter the existing passphrase when
-> prompted. The public key stays the same, so it remains registered in
-> SiteGround; only the private key file changes.
-
-### Step 2 — Collect your SSH connection details
-
-In the same **SSH Keys Manager / SSH access** panel, note:
-
-| What | Where to find it | Example |
-|------|------------------|---------|
-| **Hostname** | SSH access details (server IP or host) | `12.34.56.78` |
-| **Username** | SSH access details | `u1234-abcd` |
-| **Port** | SSH access details (SiteGround is **not** 22) | `18765` |
-| **Remote path** | File Manager address bar for `wp-content` | `/home/customer/www/researchlabusa.com/public_html/wp-content` |
-
-> To confirm the remote path, open **Site Tools → File Manager**, browse to
-> `public_html/wp-content`, and copy the full path shown. On most SiteGround
-> accounts it looks like `/home/customer/www/researchlabusa.com/public_html/wp-content`.
-
-### Step 3 — Add the secrets to GitHub
-
-In this GitHub repo: **Settings → Secrets and variables → Actions → New
-repository secret**. Add these five secrets (names must match exactly):
-
-| Secret name | Value |
-|-------------|-------|
-| `SITEGROUND_SSH_HOST` | the hostname/IP from Step 2 |
-| `SITEGROUND_SSH_USER` | the username from Step 2 |
-| `SITEGROUND_SSH_PORT` | the port from Step 2 (e.g. `18765`) |
-| `SITEGROUND_SSH_KEY` | the **entire private key** from Step 1 |
-| `SITEGROUND_REMOTE_PATH` | the `wp-content` path from Step 2 |
-
-### Step 4 — Deploy
-
-Push to `main` (or run the workflow manually from the **Actions** tab →
-*Deploy to SiteGround* → **Run workflow**). Watch the run in the **Actions**
-tab. The "Verify SSH connection" step prints `SSH OK` when credentials are
-correct; the rsync step lists every file it transfers.
+By default the contents of `site/` are published as-is. If a `package.json`
+appears in the repo, the workflow switches to running `npm ci && npm run build`
+and publishes `dist/` instead — no changes needed to make that switch.
 
 ---
 
-## How it maps
+## ⚠️ Required after the move off WordPress
+
+`SITEGROUND_REMOTE_PATH` still points at the old WordPress folder. The site is
+now plain HTML served from the web root, so this must be updated or the deploy
+will stop with an error.
+
+**GitHub → Settings → Secrets and variables → Actions → `SITEGROUND_REMOTE_PATH`**
+
+| | |
+|---|---|
+| Old value | `/home/customer/www/researchlabusa.com/public_html/wp-content` |
+| New value | `/home/customer/www/researchlabusa.com/public_html` |
+
+In other words: delete the trailing `/wp-content`. To confirm the exact path,
+run this over SSH:
 
 ```
-This repo                                SiteGround server
-───────────────────────────────────     ───────────────────────────────────────
-wp-content/themes/hello-elementor-child/ → <REMOTE_PATH>/themes/hello-elementor-child/
-wp-content/plugins/<your-plugin>/        → <REMOTE_PATH>/plugins/<your-plugin>/
-wp-content/mu-plugins/<file>.php         → <REMOTE_PATH>/mu-plugins/<file>.php
+ssh -i <your-key> u3171-6mw78ij23p20@ssh.researchlabusa.com -p18765 "cd ~/www/researchlabusa.com/public_html && pwd"
 ```
 
-Anything under `wp-content/uploads/`, `cache/`, etc. is skipped — see
-`.deployignore`.
+The workflow checks for this specific mistake and tells you if the secret still
+points inside `wp-content`.
 
 ---
 
-## What to put in this repo (and what not to)
+## The five secrets
 
-**Do version-control:** your child theme, your own custom plugins, must-use
-plugins — code you wrote.
+| Secret | Value |
+|---|---|
+| `SITEGROUND_SSH_HOST` | `ssh.researchlabusa.com` |
+| `SITEGROUND_SSH_USER` | your SiteGround SSH username |
+| `SITEGROUND_SSH_PORT` | `18765` |
+| `SITEGROUND_SSH_KEY` | the **private** key, passphrase-free |
+| `SITEGROUND_REMOTE_PATH` | the web root — see above |
 
-**Do NOT version-control** (already excluded via `.gitignore`): WordPress core,
-`wp-config.php`, the database, `wp-content/uploads/`, and third-party themes
-and plugins installed through the WP admin — including **Hello Elementor**,
-**Elementor**, and **Elementor Pro**. Those live on the server, update
-themselves, and Elementor Pro is licence-tied.
+The key must have **no passphrase**: GitHub Actions cannot type one.
+SiteGround's own key generator forces a passphrase, so generate the key
+locally and import only the public half into SiteGround:
 
-## The Elementor setup on this site
+```
+ssh-keygen -t ed25519 -f %USERPROFILE%\.ssh\siteground_deploy
+```
 
-`researchlabusa.com` runs the **Hello Elementor** theme with **Elementor Pro**.
-This repo therefore holds a child theme — `wp-content/themes/hello-elementor-child/`
-— which is where your custom CSS and PHP belong. Editing Hello Elementor
-directly is unsafe: its files are overwritten on every theme update.
+Press Enter twice when asked for a passphrase. Then:
 
-### Important: Elementor designs live in the database, not in files
+- `siteground_deploy.pub` (public) → SiteGround, **Site Tools → Devs → SSH Keys Manager → Import**
+- `siteground_deploy` (private) → GitHub secret `SITEGROUND_SSH_KEY`
 
-Pages you build in the Elementor editor, along with its global site settings,
-are stored in the WordPress **database**. This deploy pipeline moves **files
-only**, so:
-
-- Pushing to `main` will **not** transfer Elementor page designs between sites.
-- Editing pages in Elementor on the live site is safe — a deploy never
-  overwrites that work.
-- To move Elementor designs between environments, use Elementor's own
-  **Tools → Import / Export Kit**, or a database migration tool.
-
-What this pipeline *is* for: version-controlled CSS, PHP, custom plugins, and
-anything else that is genuinely a file.
+To remove a passphrase from a key you already have:
+`ssh-keygen -p -f <keyfile> -N ""`
 
 ---
 
-## Optional: exact mirroring with `--delete`
+## What the pipeline does
 
-By default nothing is ever deleted on the server. Once you're confident the
-repo holds the authoritative copy of a specific theme, you can make that one
-folder mirror exactly (so files you delete in git also get removed on the
-server). Edit `.github/workflows/deploy.yml` and change the rsync source/target
-to that folder and add `--delete`, for example:
+1. Works out how the site is built — publishing `site/` as-is when there is no
+   `package.json`, or running `npm ci && npm run build` and publishing `dist/`
+   when there is
+2. Refuses to continue if the directory to publish is missing or has no
+   `index.html`, so a broken build cannot blank the live site
+3. Validates the secrets and the SSH key, naming the specific problem if one is
+   wrong
+4. Connects to SiteGround, retrying with backoff on transient failures
+5. Copies the files to the web root with rsync
 
-```yaml
-rsync -rlvz --delete --no-perms --no-owner --no-group \
-  -e "ssh -i ~/.ssh/deploy_key -p $SG_PORT -o StrictHostKeyChecking=accept-new" \
-  wp-content/themes/hello-elementor-child/ \
-  "$SG_USER@$SG_HOST:$SG_PATH/themes/hello-elementor-child/"
-```
+A failed build never touches the server — the previous version stays live.
 
-Scope `--delete` to a single theme/plugin folder — never the whole
-`wp-content/` — so it can't touch uploads or plugins that aren't in the repo.
+### Deleting stale files
+
+By default the deploy adds and updates only; it never deletes. A page removed
+from the repo therefore stays reachable on the server.
+
+To make the server mirror the repo exactly, set `DELETE_STALE: "true"` in
+`.github/workflows/deploy.yml`. Check first that nothing else lives in your web
+root, since anything not being published will be removed. `.well-known` is
+always protected, as deleting it can break SSL certificate renewal.
 
 ---
 
 ## Troubleshooting
 
-The workflow diagnoses the common setup mistakes itself and names them in the
-Actions log. The three you're most likely to hit:
+The workflow diagnoses the common problems itself and names them in the log.
 
-- **`The private key is passphrase-protected`** — SiteGround generated the key
-  and forced a passphrase on it. Strip it with `ssh-keygen -p -f <keyfile> -N ""`
-  (see the note in Step 1), then update the secret.
+- **`SITEGROUND_REMOTE_PATH still points at wp-content`** — apply the change at
+  the top of this document.
+- **`The private key is passphrase-protected`** — strip the passphrase with
+  `ssh-keygen -p -f <keyfile> -N ""` and update the secret.
 - **`SITEGROUND_SSH_KEY contains a PUBLIC key`** — the halves are swapped. The
-  private key (the multi-line `-----BEGIN OPENSSH PRIVATE KEY-----` block) goes
-  in the GitHub secret; the public key (`ssh-ed25519 AAAA...`) goes in SiteGround.
-- **`Permission denied (publickey)`** — the private key in `SITEGROUND_SSH_KEY`
-  doesn't match a key registered in SiteGround, or the user/host is wrong.
-  Re-copy the full key including the BEGIN/END lines. The workflow prints the
-  public half of whatever key it loaded — compare that line against the key
-  listed in SiteGround's SSH Keys Manager.
-- **Connection times out** — check `SITEGROUND_SSH_PORT` (usually `18765`, not
-  `22`) and that SSH is enabled in Site Tools.
-- **Files deploy but the site doesn't change** — confirm `SITEGROUND_REMOTE_PATH`
-  points at the live `public_html/wp-content`, and that the active theme in
-  **WP Admin → Appearance → Themes** is the one you're deploying.
+  private key goes in GitHub; the public key goes in SiteGround.
+- **`Connection timed out`** — SiteGround's brute-force protection is
+  throttling the runner's IP. The workflow retries automatically; if it still
+  fails, wait a few minutes and re-run, then check **Site Tools → Security →
+  Blocked IPs**.
+- **`Permission denied (publickey)`** — the key in the secret does not match
+  one registered in SiteGround. The log prints the public half of the key it
+  loaded; compare that against the SSH Keys Manager.
+- **Site looks stale after deploying** — hard-refresh (Ctrl+F5) to bypass the
+  browser cache. If you want cache behaviour controlled properly, add a
+  `site/.htaccess` setting HTML to no-cache while allowing CSS, JS and images
+  to be cached; the deploy copies dotfiles through.
+- **`Nothing to deploy: 'site/' does not exist`** — the folder was renamed or
+  removed. Put your HTML in `site/`, or add a build that outputs to `dist/`.

@@ -1,7 +1,7 @@
 name: Deploy to SiteGround
 
-# Auto-deploy on every push to the production branch.
-# Also runnable manually from the Actions tab (workflow_dispatch).
+# Publishes the site to SiteGround on every push to main.
+# Also runnable on demand from the Actions tab.
 on:
   push:
     branches: [main]
@@ -14,19 +14,18 @@ concurrency:
 
 jobs:
   deploy:
-    name: rsync wp-content to SiteGround
+    name: Build and deploy to SiteGround
     runs-on: ubuntu-latest
     # Without this a stalled SSH connection would occupy a runner for six
     # hours (the GitHub default) before being killed.
     timeout-minutes: 15
 
-    # Secrets are passed as env vars rather than inlined into the shell, so odd
-    # characters in a value can't break quoting.
     env:
       SG_HOST: ${{ secrets.SITEGROUND_SSH_HOST }}
       SG_USER: ${{ secrets.SITEGROUND_SSH_USER }}
       SG_PORT: ${{ secrets.SITEGROUND_SSH_PORT }}
       SG_PATH: ${{ secrets.SITEGROUND_REMOTE_PATH }}
+
       # Fail fast on an unreachable host instead of waiting out the kernel's
       # default TCP timeout, and keep long transfers alive.
       SSH_OPTS: >-
@@ -36,12 +35,74 @@ jobs:
         -o ServerAliveInterval=15
         -o ServerAliveCountMax=4
 
+      # When "true", files on the server that are no longer in the build are
+      # removed, so the live site exactly mirrors this repo. That is usually
+      # what you want for a static site — otherwise a deleted page stays
+      # reachable forever. Left off by default because it deletes data: turn
+      # it on only once you are sure nothing else lives in the web root.
+      # .well-known is always protected, since removing it can break SSL
+      # certificate renewal.
+      DELETE_STALE: "false"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Reports which secrets are missing instead of failing with a bare
-      # exit code. Values are never printed — only whether they are set.
+      # --- Work out how this site is built ---------------------------------
+      #
+      # Two shapes are supported, so the pipeline keeps working whether you
+      # write plain HTML or adopt a build tool later:
+      #
+      #   1. No package.json  -> the contents of site/ are published as-is
+      #   2. package.json      -> `npm ci && npm run build`, and dist/ is
+      #                           published
+      #
+      # Nothing here needs changing when you switch between the two.
+      - name: Determine build mode
+        id: mode
+        run: |
+          if [ -f package.json ]; then
+            echo "Build tool detected (package.json present)."
+            echo "needs_build=true" >> "$GITHUB_OUTPUT"
+            echo "publish_dir=dist" >> "$GITHUB_OUTPUT"
+          else
+            echo "No package.json — publishing site/ as plain static files."
+            echo "needs_build=false" >> "$GITHUB_OUTPUT"
+            echo "publish_dir=site" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node
+        if: steps.mode.outputs.needs_build == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.mode.outputs.needs_build == 'true'
+        run: npm ci
+
+      - name: Build site
+        if: steps.mode.outputs.needs_build == 'true'
+        run: npm run build
+
+      # Refuse to publish an empty directory, so a broken build or an
+      # accidentally deleted folder cannot blank the live site.
+      - name: Check there is something to publish
+        run: |
+          DIR="${{ steps.mode.outputs.publish_dir }}"
+          if [ ! -d "$DIR" ]; then
+            echo "::error::Nothing to deploy: '$DIR/' does not exist. Put your HTML in site/, or add a build that outputs to dist/."
+            exit 1
+          fi
+          if [ ! -f "$DIR/index.html" ]; then
+            echo "::error::'$DIR/' has no index.html, so the homepage would 404. Refusing to deploy."
+            exit 1
+          fi
+          echo "Publishing $(find "$DIR" -type f | wc -l) files from $DIR/."
+
+      # --- Connection ------------------------------------------------------
+
       - name: Check required secrets are set
         run: |
           missing=0
@@ -61,8 +122,17 @@ jobs:
             missing=1
           fi
           [ "$missing" -eq 0 ] || exit 1
+
+          # This site is no longer WordPress. A path still pointing inside
+          # wp-content would publish the site to a folder that no longer
+          # exists, or bury it somewhere unreachable.
+          case "$SG_PATH" in
+            */wp-content|*/wp-content/)
+              echo "::error::SITEGROUND_REMOTE_PATH still points at wp-content, which no longer exists. Update the secret to your web root — usually /home/customer/www/researchlabusa.com/public_html"
+              exit 1
+              ;;
+          esac
           echo "All five secrets are present."
-          echo "Port is ${#SG_PORT} chars, host is ${#SG_HOST} chars (values hidden)."
 
       - name: Write and validate the SSH key
         run: |
@@ -70,8 +140,6 @@ jobs:
           printf '%s\n' "${{ secrets.SITEGROUND_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-          # A private key must open with a BEGIN ... PRIVATE KEY header. A public
-          # key (ssh-ed25519 AAAA... / ssh-rsa AAAA...) is the usual mix-up.
           if head -n 1 ~/.ssh/deploy_key | grep -qE '^(ssh-(rsa|ed25519|dss)|ecdsa-sha2-)'; then
             echo "::error::SITEGROUND_SSH_KEY contains a PUBLIC key. GitHub needs the PRIVATE key (the multi-line -----BEGIN OPENSSH PRIVATE KEY----- block). The public key is the half that goes into SiteGround."
             exit 1
@@ -84,9 +152,8 @@ jobs:
           # -P '' supplies an empty passphrase so an encrypted key fails fast
           # instead of hanging on a prompt.
           if ssh-keygen -y -P '' -f ~/.ssh/deploy_key > ~/.ssh/deploy_key.pub 2>/tmp/keyerr; then
-            echo "Private key loaded successfully. Its public half is:"
+            echo "Private key loaded. Its public half is:"
             cat ~/.ssh/deploy_key.pub
-            echo "^ This exact line must be registered in SiteGround (Site Tools -> Devs -> SSH Keys Manager)."
           else
             if grep -qi 'incorrect passphrase\|load failed' /tmp/keyerr; then
               echo "::error::The private key is passphrase-protected. GitHub Actions cannot enter a passphrase. Remove it locally with:  ssh-keygen -p -f <keyfile> -N \"\"   then update the SITEGROUND_SSH_KEY secret."
@@ -99,8 +166,6 @@ jobs:
 
       - name: Trust the SiteGround host key
         run: |
-          # Non-fatal: if keyscan is blocked or slow, fall back to accept-new
-          # at connect time rather than failing the whole deploy.
           if ssh-keyscan -T 15 -p "$SG_PORT" -H "$SG_HOST" >> ~/.ssh/known_hosts 2>/tmp/scanerr; then
             echo "Host key recorded."
           else
@@ -108,11 +173,10 @@ jobs:
             sed 's/^/  /' /tmp/scanerr || true
           fi
 
-      # Shared retry helper. SiteGround throttles repeated SSH connections from
-      # the same address, so a deploy can hit a connection timeout even though
-      # the credentials are fine. Retrying with backoff rides that out; an
-      # authentication failure is not retried, since repeating it would only
-      # deepen the throttling.
+      # SiteGround throttles repeated SSH connections from one address, so a
+      # deploy can time out even though the credentials are fine. Retrying
+      # with backoff rides that out; an authentication failure is not retried,
+      # since repeating it would only deepen the throttling.
       - name: Set up retry helper
         run: |
           cat > /tmp/retry.sh <<'SCRIPT'
@@ -146,31 +210,37 @@ jobs:
           /tmp/retry.sh 4 "SSH connection" -- \
             ssh -i ~/.ssh/deploy_key -p "$SG_PORT" $SSH_OPTS \
               "$SG_USER@$SG_HOST" \
-              'echo "SSH OK on $(hostname)"; echo "Home: $(pwd)"'
+              'echo "SSH OK on $(hostname)"'
 
-      - name: Confirm the remote path exists
+      - name: Confirm the web root exists
         run: |
-          /tmp/retry.sh 3 "Remote path check" -- \
+          /tmp/retry.sh 3 "Web root check" -- \
             ssh -i ~/.ssh/deploy_key -p "$SG_PORT" $SSH_OPTS \
               "$SG_USER@$SG_HOST" "test -d '$SG_PATH'" \
-          || { echo "::error::SITEGROUND_REMOTE_PATH may not exist on the server. Run 'ls -d ~/www/*/public_html/wp-content' over SSH to confirm the correct path."; exit 1; }
-          echo "Remote wp-content path exists."
+          || { echo "::error::SITEGROUND_REMOTE_PATH does not exist on the server. Run 'ls -d ~/www/*/public_html' over SSH to find the correct web root."; exit 1; }
+          echo "Web root exists."
 
-      - name: Deploy wp-content via rsync
+      # --- Deploy ----------------------------------------------------------
+
+      - name: Deploy site via rsync
         run: |
-          # --partial keeps a part-transferred file so a retry resumes it
-          # rather than starting the transfer from the beginning.
+          DELETE_FLAGS=""
+          if [ "$DELETE_STALE" = "true" ]; then
+            # Never remove .well-known: it is used for SSL certificate
+            # renewal and is not part of this build.
+            DELETE_FLAGS="--delete --exclude=.well-known/ --exclude=cgi-bin/"
+            echo "Mirroring exactly — files not in this build will be removed."
+          else
+            echo "Adding and updating files only; nothing on the server will be deleted."
+          fi
+
+          # --partial lets a retried transfer resume rather than restart.
           /tmp/retry.sh 3 "rsync transfer" -- \
             rsync -rlz --partial --no-perms --no-owner --no-group \
-              --itemize-changes \
-              --exclude-from=.deployignore \
+              --itemize-changes $DELETE_FLAGS \
               -e "ssh -i ~/.ssh/deploy_key -p $SG_PORT $SSH_OPTS" \
-              wp-content/ \
+              "${{ steps.mode.outputs.publish_dir }}/" \
               "$SG_USER@$SG_HOST:$SG_PATH/"
-        # NOTE: --delete is intentionally NOT set. This deploy only adds/updates
-        # the files tracked in this repo; it never removes files that exist on
-        # the server. See DEPLOYMENT.md for how to enable exact mirroring per
-        # directory once you're confident in the setup.
 
       - name: Done
-        run: echo "✅ Deployed wp-content to SiteGround"
+        run: echo "✅ Deployed https://researchlabusa.com"

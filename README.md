@@ -1,33 +1,48 @@
 # Research Lab USA
 
-WordPress custom code for **https://researchlabusa.com/**, hosted on SiteGround.
+Website for **https://researchlabusa.com**, hosted on SiteGround.
 
-Pushing to the `main` branch automatically deploys the contents of
-`wp-content/` to the SiteGround server via GitHub Actions (rsync over SSH).
+Pushing to `main` publishes the site automatically. Nothing else is required —
+no build step, no framework, no server-side code.
 
-## Repository layout
+## How it works
+
+Put your files in **`site/`**. Whatever is in there is published to the web
+root exactly as-is:
 
 ```
-wp-content/
-  themes/
-    hello-elementor-child/   Child theme — your custom CSS and PHP
-  plugins/                   Custom / version-controlled plugins
-  mu-plugins/                Must-use plugins (optional)
-.github/workflows/
-  deploy.yml                 Auto-deploy workflow (push to main → SiteGround)
-.deployignore                Files rsync skips when deploying
+site/index.html   ->  https://researchlabusa.com/
+site/about.html   ->  https://researchlabusa.com/about.html
+site/styles.css   ->  https://researchlabusa.com/styles.css
 ```
 
-The site runs **Hello Elementor + Elementor Pro**. Those are installed and
-updated through the WordPress admin and are deliberately kept out of this repo;
-your customisations go in the child theme. Note that Elementor page designs are
-stored in the database, so they are not moved by this pipeline — see
-[DEPLOYMENT.md](./DEPLOYMENT.md).
+Edit, commit, push. It is live in under a minute.
 
-## Getting started
+`site/index.html` currently holds a placeholder — replace it and start
+building.
 
-The deploy pipeline needs a one-time setup (SiteGround SSH key + five GitHub
-secrets). Full instructions are in **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+## Preview locally
 
-Only your own code lives here — WordPress core, `wp-config.php`, the database,
-and `wp-content/uploads/` stay on the server and are excluded from git.
+Open `site/index.html` in a browser, or serve the folder so root-relative
+paths behave exactly as they will in production:
+
+```bash
+python3 -m http.server -d site 8000   # then open http://localhost:8000
+```
+
+## Adding a build tool later
+
+The pipeline handles both shapes without any edits:
+
+| Repo state | What gets published |
+|---|---|
+| No `package.json` | `site/` as-is |
+| `package.json` present | runs `npm ci && npm run build`, publishes `dist/` |
+
+So if you later adopt a framework, add it in the normal way and the deploy
+switches over on its own.
+
+## Deployment
+
+Credentials, the required GitHub secrets, and troubleshooting are documented in
+**[DEPLOYMENT.md](./DEPLOYMENT.md)**.
