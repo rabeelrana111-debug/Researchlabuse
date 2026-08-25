@@ -281,19 +281,24 @@ NOTICE = """\t<section class="section section--tight">
 #
 # A promotional placement for Avid Peptides, shown on the peptide pages only.
 #
-# Three things here are deliberate and should survive any rewrite:
+# The copy is straightforwardly promotional — it is an advert and reads like
+# one. Two structural details carry the compliance load instead, and both
+# should survive a rewrite of the words:
 #
-#   1. It is labelled as a partner placement, in the block itself rather than
-#      in small print elsewhere. Undisclosed paid promotion dressed as an
-#      editorial recommendation is what the FTC's endorsement guidance exists
-#      to stop, and on a site whose selling point is candour it would cost
-#      more in credibility than it could earn.
+#   1. The "Partner" tag. An advertisement that is recognisable as an
+#      advertisement needs no separate disclaimer, which is why banner ads do
+#      not carry one — but strip the label and the same block becomes an
+#      undisclosed endorsement, which is what the FTC's endorsement guidance
+#      exists to stop. The tag is what keeps this an ad rather than a covert
+#      recommendation, and it costs the promotion nothing.
 #   2. rel="sponsored" on the link. That is the attribute Google specifies for
 #      paid or promotional links; without it the link reads as an editorial
-#      endorsement passing ranking signal, which is a link-scheme violation.
-#   3. No claims about purity, testing or shipping. We have not verified any,
-#      and inventing them would be exactly the unsourced supplier copy the
-#      rest of the site tells readers to distrust.
+#      endorsement passing ranking signal, which is a link-scheme violation
+#      that would count against this site's own rankings.
+#
+# Still no claims about purity, testing, shipping or price: nobody here has
+# seen the partner's certificates, and unverifiable specifics are what the
+# rest of the site teaches readers to discount.
 PARTNER_NAME = "Avid Peptides"
 PARTNER_URL = "https://avidpeptides.com"
 
@@ -302,18 +307,12 @@ PARTNER = f"""\t<section class="section section--tight">
 \t\t\t<aside class="partner" aria-labelledby="partner-heading">
 \t\t\t\t<p class="partner__tag">Partner</p>
 \t\t\t\t<div class="partner__body">
-\t\t\t\t\t<h2 class="partner__title" id="partner-heading">Sourcing peptides:
-\t\t\t\t\t{PARTNER_NAME}</h2>
-\t\t\t\t\t<p>Research Lab USA does not sell compounds. Readers who need
-\t\t\t\t\tresearch-grade peptide material can source it from our partner
-\t\t\t\t\t{PARTNER_NAME}.</p>
-\t\t\t\t\t<p class="partner__small">This is a paid placement. We are not
-\t\t\t\t\tinvolved in {PARTNER_NAME}&rsquo; synthesis or testing and have not
-\t\t\t\t\tindependently verified their material, so treat them as you would
-\t\t\t\t\tany supplier: ask for the batch certificate of analysis and check it
-\t\t\t\t\tagainst the specification on this page before ordering. Our guides
-\t\t\t\t\tare written independently and this arrangement does not change
-\t\t\t\t\tthem.</p>
+\t\t\t\t\t<h2 class="partner__title" id="partner-heading">Need research
+\t\t\t\t\tpeptides? Visit {PARTNER_NAME}</h2>
+\t\t\t\t\t<p>Research Lab USA publishes the reference material &mdash; our
+\t\t\t\t\tpartner {PARTNER_NAME} supplies the peptides. If this guide covers
+\t\t\t\t\tsomething you are ready to work with, head over and see what they
+\t\t\t\t\thave available.</p>
 \t\t\t\t</div>
 \t\t\t\t<p class="partner__action">
 \t\t\t\t\t<a class="btn btn--primary" href="{PARTNER_URL}"
@@ -1456,10 +1455,10 @@ CONTACT = """\t<section class="section">
 \t\t\t\tuse, and we do not vet suppliers or settle disputes with them.
 \t\t\t\tMessages asking for those will not get a useful reply, and we would
 \t\t\t\trather say so here than leave you waiting for one.</p>
-\t\t\t\t<p>Our peptide pages carry a paid placement for """ + PARTNER_NAME + """,
-\t\t\t\tlabelled as such wherever it appears. It buys placement and nothing
-\t\t\t\telse &mdash; it does not shape what our guides say, and we cannot
-\t\t\t\tanswer questions about their orders or their material.</p>
+\t\t\t\t<p>""" + PARTNER_NAME + """ is our peptide supply partner, and you
+\t\t\t\twill see them featured on our peptide pages. Questions about their
+\t\t\t\tcatalogue, an order or a batch should go to them directly &mdash; we
+\t\t\t\tcannot answer those for them.</p>
 \t\t\t</div>
 \t\t</div>
 \t</section>

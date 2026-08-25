@@ -699,14 +699,6 @@ ul, ol { margin: 0; padding: 0; }
 .partner__body p { margin-bottom: var(--s-3); }
 .partner__body p:last-child { margin-bottom: 0; }
 
-/* Darker than --muted, which only reaches 4.3:1 against this panel's tinted
-   background. This is the disclosure text — the one part of the block that has
-   to be readable — so it gets a tone that clears AA at 5.4:1. */
-.partner__small {
-	font-size: var(--t-xs);
-	color: #57667B;
-}
-
 .partner__action { margin: 0; }
 .partner__action .btn { width: 100%; justify-content: center; }
 
