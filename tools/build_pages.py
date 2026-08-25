@@ -275,6 +275,61 @@ NOTICE = """\t<section class="section section--tight">
 \t</section>
 """
 
+# --------------------------------------------------------------------------
+# Sourcing partner
+# --------------------------------------------------------------------------
+#
+# A promotional placement for Avid Peptides, shown on the peptide pages only.
+#
+# Three things here are deliberate and should survive any rewrite:
+#
+#   1. It is labelled as a partner placement, in the block itself rather than
+#      in small print elsewhere. Undisclosed paid promotion dressed as an
+#      editorial recommendation is what the FTC's endorsement guidance exists
+#      to stop, and on a site whose selling point is candour it would cost
+#      more in credibility than it could earn.
+#   2. rel="sponsored" on the link. That is the attribute Google specifies for
+#      paid or promotional links; without it the link reads as an editorial
+#      endorsement passing ranking signal, which is a link-scheme violation.
+#   3. No claims about purity, testing or shipping. We have not verified any,
+#      and inventing them would be exactly the unsourced supplier copy the
+#      rest of the site tells readers to distrust.
+PARTNER_NAME = "Avid Peptides"
+PARTNER_URL = "https://avidpeptides.com"
+
+PARTNER = f"""\t<section class="section section--tight">
+\t\t<div class="wrap">
+\t\t\t<aside class="partner" aria-labelledby="partner-heading">
+\t\t\t\t<p class="partner__tag">Partner</p>
+\t\t\t\t<div class="partner__body">
+\t\t\t\t\t<h2 class="partner__title" id="partner-heading">Sourcing peptides:
+\t\t\t\t\t{PARTNER_NAME}</h2>
+\t\t\t\t\t<p>Research Lab USA does not sell compounds. Readers who need
+\t\t\t\t\tresearch-grade peptide material can source it from our partner
+\t\t\t\t\t{PARTNER_NAME}.</p>
+\t\t\t\t\t<p class="partner__small">This is a paid placement. We are not
+\t\t\t\t\tinvolved in {PARTNER_NAME}&rsquo; synthesis or testing and have not
+\t\t\t\t\tindependently verified their material, so treat them as you would
+\t\t\t\t\tany supplier: ask for the batch certificate of analysis and check it
+\t\t\t\t\tagainst the specification on this page before ordering. Our guides
+\t\t\t\t\tare written independently and this arrangement does not change
+\t\t\t\t\tthem.</p>
+\t\t\t\t</div>
+\t\t\t\t<p class="partner__action">
+\t\t\t\t\t<a class="btn btn--primary" href="{PARTNER_URL}"
+\t\t\t\t\t   rel="sponsored noopener" target="_blank">Visit {PARTNER_NAME}
+\t\t\t\t\t<span class="sr-only">(opens in a new tab)</span></a>
+\t\t\t\t</p>
+\t\t\t</aside>
+\t\t</div>
+\t</section>
+"""
+
+
+def with_partner(page_html: str) -> str:
+    """Place the partner block immediately above the research-use notice."""
+    return page_html.replace(NOTICE, PARTNER + NOTICE, 1)
+
 
 def hero(eyebrow: str, title: str, lede: str) -> str:
     return f"""\t<section class="section">
@@ -516,48 +571,6 @@ ABOUT = """\t<section class="section">
 \t</section>
 """
 
-CONTACT = """\t<section class="section">
-\t\t<div class="wrap">
-\t\t\t<div class="sectionhead">
-\t\t\t\t<p class="eyebrow">Contact</p>
-\t\t\t\t<h1>Get in touch</h1>
-\t\t\t\t<p class="lede">Questions about a guide, corrections, and suggestions
-\t\t\t\tfor what to cover next are all welcome.</p>
-\t\t\t</div>
-\t\t</div>
-\t</section>
-
-\t<section class="section section--tight">
-\t\t<div class="wrap two-col">
-\t\t\t<div class="measure prose">
-\t\t\t\t<h2>Email</h2>
-\t\t\t\t<p>Write to <a href="mailto:""" + EMAIL + '">' + EMAIL + """</a> and we
-\t\t\t\twill reply within one business day.</p>
-
-\t\t\t\t<h2>What we can help with</h2>
-\t\t\t\t<ul>
-\t\t\t\t\t<li>Questions about the content of a guide</li>
-\t\t\t\t\t<li>Corrections &mdash; including sources we have missed or misread</li>
-\t\t\t\t\t<li>Suggestions for compounds or topics to cover</li>
-\t\t\t\t\t<li>Requests to cite or reference our material</li>
-\t\t\t\t</ul>
-
-\t\t\t\t<h2>What we cannot help with</h2>
-\t\t\t\t<p>We do not give dosing guidance, advise on human or veterinary use,
-\t\t\t\tor recommend where to buy anything. Messages asking for those will not
-\t\t\t\tget a useful reply, and we would rather say so up front than leave you
-\t\t\t\twaiting.</p>
-\t\t\t</div>
-\t\t\t<div class="figure">
-\t\t\t\t<img src="/assets/ampoules-microscope.jpg"
-\t\t\t\t     alt="Glass ampoules on a bench in front of a microscope"
-\t\t\t\t     width="1600" height="1067" loading="lazy" decoding="async">
-\t\t\t</div>
-\t\t</div>
-\t</section>
-
-""" + NOTICE
-
 GUIDE_CARDS = [
     ("GW-501516", "ampoules-microscope.jpg",
      "Amber and clear glass ampoules on a bench in front of a microscope",
@@ -761,7 +774,7 @@ def main() -> None:
     write("peptides", "Peptides",
           "Research peptide reference material: sequences, reconstitution, cold-chain "
           "handling and stability. For research use only.",
-          with_compounds(PEPTIDES, "/peptides/"))
+          with_partner(with_compounds(PEPTIDES, "/peptides/")))
 
     write("nootropics", "Nootropics",
           "Reference material on nootropic research compounds, with an explicit account "
@@ -1208,6 +1221,11 @@ def build_compound_pages() -> None:
             parent_href=cfg["parent_href"], summary=cfg["summary"],
             body=cfg["body"], image=cfg["image"], alt=cfg["alt"],
         )
+        # The partner sells peptides, so the placement runs on the peptide
+        # pages only. Showing it against a SARM or a nootropic would promote
+        # a supplier for material they do not stock.
+        if cfg["parent_href"] == "/peptides/":
+            body = with_partner(body)
         write(route, cfg["title"],
               f"{cfg['name']}: identity, handling and the state of the published "
               f"record. Laboratory research use only.", body)
@@ -1434,10 +1452,14 @@ CONTACT = """\t<section class="section">
 \t\t\t\t</ul>
 
 \t\t\t\t<h2>What we cannot help with</h2>
-\t\t\t\t<p>We do not give dosing guidance, advise on human or veterinary use,
-\t\t\t\tor recommend where to buy anything. Messages asking for those will not
-\t\t\t\tget a useful reply, and we would rather say so here than leave you
-\t\t\t\twaiting for one.</p>
+\t\t\t\t<p>We do not give dosing guidance or advise on human or veterinary
+\t\t\t\tuse, and we do not vet suppliers or settle disputes with them.
+\t\t\t\tMessages asking for those will not get a useful reply, and we would
+\t\t\t\trather say so here than leave you waiting for one.</p>
+\t\t\t\t<p>Our peptide pages carry a paid placement for """ + PARTNER_NAME + """,
+\t\t\t\tlabelled as such wherever it appears. It buys placement and nothing
+\t\t\t\telse &mdash; it does not shape what our guides say, and we cannot
+\t\t\t\tanswer questions about their orders or their material.</p>
 \t\t\t</div>
 \t\t</div>
 \t</section>
