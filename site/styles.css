@@ -657,6 +657,76 @@ ul, ol { margin: 0; padding: 0; }
 .notice strong { color: var(--danger); }
 
 /* ---------------------------------------------------------------------------
+   Partner placement
+   ---------------------------------------------------------------------------
+   A paid placement on the peptide pages. Styled to sit alongside the editorial
+   content without impersonating it: the green rule and the "Partner" tag mark
+   it as promotional at a glance, where the research-use notice next to it uses
+   red. Both are asides; neither should read as body copy.
+   ------------------------------------------------------------------------ */
+
+.partner {
+	display: grid;
+	gap: var(--s-4) var(--s-6);
+	align-items: center;
+	max-width: 70rem;
+	margin: 0 auto;
+	padding: var(--s-5) var(--s-6);
+	border: 1px solid var(--line);
+	border-left: 4px solid var(--accent);
+	border-radius: var(--r);
+	background: var(--brand-50);
+}
+
+.partner__tag {
+	justify-self: start;
+	margin: 0;
+	padding: 0.2rem 0.6rem;
+	border-radius: 999px;
+	background: var(--accent);
+	color: #fff;
+	font-size: var(--t-xs);
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.partner__title {
+	margin-bottom: var(--s-2);
+	font-size: var(--t-lg);
+}
+
+.partner__body p { margin-bottom: var(--s-3); }
+.partner__body p:last-child { margin-bottom: 0; }
+
+/* Darker than --muted, which only reaches 4.3:1 against this panel's tinted
+   background. This is the disclosure text — the one part of the block that has
+   to be readable — so it gets a tone that clears AA at 5.4:1. */
+.partner__small {
+	font-size: var(--t-xs);
+	color: #57667B;
+}
+
+.partner__action { margin: 0; }
+.partner__action .btn { width: 100%; justify-content: center; }
+
+/* Side-by-side once there is room for the button to sit beside the text
+   without squeezing either. Below this it stacks, which is also the order
+   the content reads in the markup. */
+@media (min-width: 48rem) {
+	.partner {
+		grid-template-columns: 1fr auto;
+		grid-template-areas:
+			"tag    tag"
+			"body   action";
+	}
+	.partner__tag    { grid-area: tag; }
+	.partner__body   { grid-area: body; }
+	.partner__action { grid-area: action; }
+	.partner__action .btn { width: auto; }
+}
+
+/* ---------------------------------------------------------------------------
    Footer
    ------------------------------------------------------------------------ */
 

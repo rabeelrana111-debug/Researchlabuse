@@ -92,7 +92,7 @@ function e($value) {
 	<meta name="description" content="Questions, corrections and suggestions for what to cover next. Reach us at info@researchlabusa.com.">
 	<link rel="canonical" href="https://researchlabusa.com/contact/">
 	<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
-	<link rel="stylesheet" href="/styles.css?v=10630ac016">
+	<link rel="stylesheet" href="/styles.css?v=0e5e0778a5">
 </head>
 <body>
 
@@ -306,10 +306,14 @@ function e($value) {
 				</ul>
 
 				<h2>What we cannot help with</h2>
-				<p>We do not give dosing guidance, advise on human or veterinary use,
-				or recommend where to buy anything. Messages asking for those will not
-				get a useful reply, and we would rather say so here than leave you
-				waiting for one.</p>
+				<p>We do not give dosing guidance or advise on human or veterinary
+				use, and we do not vet suppliers or settle disputes with them.
+				Messages asking for those will not get a useful reply, and we would
+				rather say so here than leave you waiting for one.</p>
+				<p>Our peptide pages carry a paid placement for Avid Peptides,
+				labelled as such wherever it appears. It buys placement and nothing
+				else &mdash; it does not shape what our guides say, and we cannot
+				answer questions about their orders or their material.</p>
 			</div>
 		</div>
 	</section>
