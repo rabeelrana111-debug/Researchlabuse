@@ -196,7 +196,19 @@ ul, ol { margin: 0; padding: 0; }
 	background: var(--accent);
 	font-size: var(--t-md);
 }
-.utilitybar__social a { color: #fff; display: flex; }
+/* Each icon is 16px, but the tappable area must not be. WCAG 2.2 sets a 24px
+   minimum for a standalone control and the audit asks for 44px, so the link
+   is padded out to 44px and the row's gap reduced to compensate — the icons
+   stay where they were, the targets around them get much bigger. */
+.utilitybar__social a {
+	color: #fff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 44px;
+	min-height: 44px;
+	margin: calc(var(--s-3) * -1) 0;
+}
 .utilitybar__social a:hover { color: #E6FFF8; }
 
 /* ---------------------------------------------------------------------------
@@ -656,6 +668,53 @@ ul, ol { margin: 0; padding: 0; }
 }
 .notice strong { color: var(--danger); }
 
+/* An informational variant: same shape, but blue rather than the red used for
+   the research-use warning, so the two are not mistaken for each other. */
+.notice--info { border-left-color: var(--brand); }
+.notice--info strong { color: var(--brand); }
+
+/* ---------------------------------------------------------------------------
+   Byline
+   ---------------------------------------------------------------------------
+   Authorship and dates on the compound guides. Health-adjacent reference
+   material that never says when it was last checked asks to be taken on
+   faith, so this sits directly under the page heading, where it is read
+   before the claims rather than after them.
+   ------------------------------------------------------------------------ */
+
+.byline {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--s-2) var(--s-5);
+	/* .sectionhead carries a 4rem bottom margin, sized to separate a heading
+	   block from unrelated content below it. The byline belongs to the
+	   heading, so half of that gap is pulled back — otherwise it reads as a
+	   stray line floating between two sections. */
+	margin: calc(var(--s-8) * -1) 0 var(--s-8);
+	padding-top: var(--s-4);
+	border-top: 1px solid var(--line);
+	font-size: var(--t-sm);
+	color: #57667B;          /* 5.9:1 on white — clears AA at this size */
+}
+/* Only the dates resist breaking. The "Written by" item is 302px wide, which
+   at 320px viewport overflowed the page when the whole item was nowrap. */
+.byline__item { min-width: 0; }
+.byline time { color: inherit; white-space: nowrap; }
+
+/* A correction or identity warning inside a reference block. Amber, because
+   it is neither the red legal notice nor ordinary body copy: it means "this
+   number is easy to confuse with a different one". */
+.note-caution {
+	margin-top: var(--s-3);
+	padding: var(--s-3) var(--s-4);
+	border-left: 3px solid #A15C00;
+	border-radius: var(--r-sm);
+	background: #FFF8EC;
+	font-size: var(--t-xs);
+	color: #4A3B24;
+}
+.note-caution strong { color: #7A4600; }
+
 /* ---------------------------------------------------------------------------
    Partner placement
    ---------------------------------------------------------------------------
@@ -750,7 +809,15 @@ ul, ol { margin: 0; padding: 0; }
 }
 
 .footer__list { list-style: none; }
-.footer__list li { margin-bottom: var(--s-2); }
+/* Navigation links in a list are standalone targets, not inline prose, so the
+   24px WCAG 2.2 minimum applies to them. Padding the anchor rather than the
+   list item is what makes the target grow, since the anchor is what you tap. */
+.footer__list li { margin-bottom: var(--s-1); }
+.footer__list a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 28px;
+}
 
 .footer__bottom {
 	display: flex;

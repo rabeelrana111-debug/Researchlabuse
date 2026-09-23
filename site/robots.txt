@@ -1,0 +1,8 @@
+# https://researchlabusa.com
+#
+# Everything here is public reference material meant to be found.
+# There is no admin area or private section to keep crawlers out of.
+User-agent: *
+Allow: /
+
+Sitemap: https://researchlabusa.com/sitemap.xml

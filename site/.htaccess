@@ -8,6 +8,36 @@
 
 ErrorDocument 404 /404.html
 
+# --- Canonical hostname ----------------------------------------------------
+# Search engines were finding this site as both researchlabusa.com and
+# www.researchlabusa.com, which splits each page into two addresses and
+# divides whatever authority it has earned between them.
+#
+# researchlabusa.com is the canonical host. Both conditions are joined with
+# [OR] so http://www.… reaches https://… in ONE hop: chained rules would send
+# it via http:// first, and every extra hop costs a round trip and a little
+# ranking signal.
+#
+# The HTTPS test accepts X-Forwarded-Proto as well as %{HTTPS}. Behind a proxy
+# or CDN that terminates TLS upstream, %{HTTPS} is "off" even for a request
+# that arrived over HTTPS — a rule testing only %{HTTPS} would then redirect
+# an HTTPS request to HTTPS, for ever. That is the classic way this block
+# takes a site down, and the second condition is what prevents it.
+#
+# If a redirect loop ever does appear, comment this block out first: the site
+# serves correctly without it, and only the duplicate-hostname issue returns.
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+
+	# Anything not already on the canonical https://researchlabusa.com
+	RewriteCond %{HTTPS} !=on
+	RewriteCond %{HTTP:X-Forwarded-Proto} !=https [NC]
+	RewriteRule ^ https://researchlabusa.com%{REQUEST_URI} [R=301,L,NE]
+
+	RewriteCond %{HTTP_HOST} ^www\. [NC]
+	RewriteRule ^ https://researchlabusa.com%{REQUEST_URI} [R=301,L,NE]
+</IfModule>
+
 # --- Clean URLs ------------------------------------------------------------
 # Every page is a directory index, so /about/ resolves to about/index.html and
 # /contact/ to contact/index.php with no rewriting at all. Listing index.php
@@ -91,12 +121,8 @@ DirectoryIndex index.html index.php
 </IfModule>
 
 # --- HTTPS redirect --------------------------------------------------------
-# SiteGround normally handles this in Site Tools (Security -> HTTPS Enforce).
-# Only uncomment if HTTP requests are not being redirected, and remove it
-# again if you get a redirect loop.
-#
-# <IfModule mod_rewrite.c>
-# 	RewriteEngine On
-# 	RewriteCond %{HTTPS} !=on
-# 	RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-# </IfModule>
+# Handled by the canonical-hostname block at the top of this file, which
+# normalises scheme and host together in a single redirect. SiteGround may
+# also enforce HTTPS in Site Tools (Security -> HTTPS Enforce); the two are
+# harmless together, because whichever fires first lands on the canonical URL
+# and the other then has nothing left to change.

@@ -2,7 +2,7 @@
 /**
  * Contact form handler for researchlabusa.com.
  *
- * Renders the page and, on POST, emails the enquiry to the address in $to.
+ * Renders the page and, on POST, emails the inquiry to the address in $to.
  * Kept in one file so a failed submission can redisplay the form with the
  * visitor's text still in it, rather than losing what they typed.
  */
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $subject = $values['subject'] !== ''
                 ? $header_safe($values['subject'])
-                : 'Website enquiry';
+                : 'Website inquiry';
 
             // From must be an address on this domain or SPF and DKIM fail and
             // the mail lands in spam. The visitor's address goes in Reply-To,
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'MIME-Version: 1.0',
             ]);
 
-            $body = "New enquiry from the website contact form.\n\n"
+            $body = "New inquiry from the website contact form.\n\n"
                   . 'Name:    ' . $values['name'] . "\n"
                   . 'Email:   ' . $values['email'] . "\n"
                   . 'Phone:   ' . ($values['phone'] !== '' ? $values['phone'] : '(not given)') . "\n"
@@ -91,8 +91,9 @@ function e($value) {
 	<title>Contact | Research Lab USA</title>
 	<meta name="description" content="Questions, corrections and suggestions for what to cover next. Reach us at info@researchlabusa.com.">
 	<link rel="canonical" href="https://researchlabusa.com/contact/">
-	<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
-	<link rel="stylesheet" href="/styles.css?v=91d5edcf10">
+	<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article","headline":"Contact","description":"Questions, corrections and suggestions for what to cover next. Reach us at info@researchlabusa.com.","mainEntityOfPage":"https://researchlabusa.com/contact/","author":{"@type":"Organization","name":"Research Lab USA","url":"https://researchlabusa.com/"},"publisher":{"@type":"Organization","name":"Research Lab USA","url":"https://researchlabusa.com/"},"datePublished":"2026-08-20","dateModified":"2026-09-23"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://researchlabusa.com/"},{"@type":"ListItem","position":2,"name":"Contact"}]}]}</script>
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+	<link rel="stylesheet" href="/styles.css?v=c301b71265">
 </head>
 <body>
 
@@ -123,7 +124,7 @@ function e($value) {
 			<span class="logo__mark" aria-hidden="true">
 				<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="currentColor"/><path d="M16 10h8v6l6 12a3 3 0 0 1-2.7 4.3H12.7A3 3 0 0 1 10 28l6-12v-6Z" fill="#fff"/><circle cx="20" cy="26" r="2.5" fill="currentColor"/></svg>
 			</span>
-			<span class="logo__text">Research<strong>Lab USA</strong></span>
+			<span class="logo__text">Research <strong>Lab USA</strong></span>
 		</a>
 
 		<button class="navtoggle" aria-expanded="false" aria-controls="mainnav">
@@ -179,7 +180,7 @@ function e($value) {
 		</nav>
 
 		<div class="header__actions">
-			<a class="btn btn--ghost" href="/contact/">Enquire</a>
+			<a class="btn btn--ghost" href="/contact/">Inquire</a>
 		</div>
 	</div>
 </header>
@@ -229,7 +230,7 @@ function e($value) {
 					</div>
 				</aside>
 
-				<!-- Enquiry form -->
+				<!-- Inquiry form -->
 				<div class="contactform">
 <?php if ($sent): ?>
 					<p class="formnote formnote--ok" role="status">
@@ -285,9 +286,14 @@ function e($value) {
 						</div>
 
 						<button class="btn btn--primary" type="submit">Send message</button>
-						<p class="note-sm">We use your details only to reply to this
-						enquiry. Please do not send confidential information through
-						this form.</p>
+						<p class="note-sm">We use what you send through this form only to
+						read and answer your inquiry. Please do not submit confidential,
+						patient or medical information. We do not sell contact-form
+						information or share it with anyone for their own marketing. It
+						may be handled by the service providers that run our website and
+						email, under confidentiality obligations. For the detail, read our
+						<a href="/privacy/">Privacy Policy</a> and
+						<a href="/terms/">Terms of Use</a>.</p>
 					</form>
 				</div>
 			</div>
@@ -321,12 +327,14 @@ function e($value) {
 	<section class="section section--tight">
 		<div class="wrap">
 			<p class="notice">
-				<strong>For laboratory and research use only.</strong> The materials
-				discussed on this website are not medicines, dietary supplements,
-				cosmetics or food. None has been evaluated or approved by the FDA for
-				human or veterinary use. Nothing here is medical advice, and nothing
-				here should be read as a suggestion that any compound is safe or
-				effective for any purpose.
+				<strong>For laboratory research use only.</strong> The research
+				materials described on this website are not intended for human or
+				veterinary use. Where we refer to an approved drug or active
+				ingredient, we are describing the published regulatory status of that
+				specific approved product &mdash; it does not mean a research material
+				supplied by a third party is FDA-approved. Nothing here is medical
+				advice or a recommendation about diagnosis, treatment, dosing or
+				personal use.
 			</p>
 		</div>
 	</section>
@@ -354,6 +362,8 @@ function e($value) {
 				<ul class="footer__list">
 					<li><a href="/about/">About</a></li>
 					<li><a href="/contact/">Contact</a></li>
+					<li><a href="/privacy/">Privacy Policy</a></li>
+					<li><a href="/terms/">Terms of Use</a></li>
 				</ul>
 			</div>
 			<div>
