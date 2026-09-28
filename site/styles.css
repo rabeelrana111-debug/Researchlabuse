@@ -716,6 +716,91 @@ ul, ol { margin: 0; padding: 0; }
 .note-caution strong { color: #7A4600; }
 
 /* ---------------------------------------------------------------------------
+   Related guides and the guide index
+   ---------------------------------------------------------------------------
+   Contextual links between guides. The header dropdown and the footer were
+   the only routes between compound pages, which left each one a dead end for
+   a reader who arrived from search — and gave a crawler no in-content path
+   from one guide to the next.
+   ------------------------------------------------------------------------ */
+
+.related {
+	max-width: 70rem;
+	margin: 0 auto;
+	padding: var(--s-6);
+	border: 1px solid var(--line);
+	border-radius: var(--r);
+	background: var(--surface-alt);
+}
+
+.related__list,
+.related__topics {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.related__list {
+	display: grid;
+	gap: var(--s-3);
+	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+	margin-bottom: var(--s-5);
+}
+
+.related__list li {
+	padding: var(--s-3) var(--s-4);
+	border-radius: var(--r-sm);
+	background: var(--white);
+	border: 1px solid var(--line);
+}
+
+.related__list a {
+	display: block;
+	font-weight: 700;
+	text-decoration: none;
+	min-height: 24px;
+}
+.related__list a:hover { text-decoration: underline; }
+
+.related__note {
+	display: block;
+	margin-top: var(--s-1);
+	font-size: var(--t-xs);
+	color: #57667B;          /* 5.9:1 on white */
+}
+
+.related__more {
+	margin-bottom: var(--s-2);
+	font-size: var(--t-sm);
+	color: #57667B;
+}
+
+.related__topics {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--s-2) var(--s-4);
+}
+.related__topics a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 28px;
+	font-weight: 600;
+	font-size: var(--t-sm);
+}
+
+/* The full library on /guides/ — one column per topic where there is room. */
+.guideindex {
+	display: grid;
+	gap: var(--s-8);
+	grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+.guideindex__group h2 { margin-bottom: var(--s-4); }
+.guideindex__group h2 a { text-decoration: none; }
+.guideindex__group h2 a:hover { text-decoration: underline; }
+.guideindex .related__list { grid-template-columns: 1fr; margin-bottom: 0; }
+.guideindex .related__list li { background: var(--white); }
+
+/* ---------------------------------------------------------------------------
    Partner placement
    ---------------------------------------------------------------------------
    A paid placement on the peptide pages. Styled to sit alongside the editorial
