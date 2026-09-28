@@ -88,6 +88,16 @@ function e($value) {
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-X5GMPYGNT2"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+
+		gtag('config', 'G-X5GMPYGNT2');
+	</script>
 	<title>Contact Research Lab USA — Questions & Corrections</title>
 	<meta name="description" content="Questions about a guide, corrections and suggestions for what to cover next are all welcome. Reach the editorial team at info@researchlabusa.com.">
 	<link rel="canonical" href="https://researchlabusa.com/contact/">
