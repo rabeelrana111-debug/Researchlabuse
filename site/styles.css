@@ -987,11 +987,19 @@ ul, ol { margin: 0; padding: 0; }
 	box-shadow: var(--shadow-lg);
 
 	/* Hidden by default. visibility (rather than display) keeps the panel
-	   focusable-in-order and lets the fade animate. */
+	   focusable-in-order and lets the fade animate.
+
+	   visibility is a discrete property: putting it in a transition makes it
+	   flip at the halfway point, not at either end. That left the panel
+	   unfocusable for the first 80ms after it opened — a keyboard user who
+	   pressed Enter and Tab quickly would tab straight past the menu they
+	   had just opened — and still focusable for 80ms after it closed. So it
+	   is delayed rather than transitioned: on close it waits out the fade,
+	   and on open (below) it flips immediately. */
 	opacity: 0;
 	visibility: hidden;
 	transform: translateY(-4px);
-	transition: opacity .16s ease, transform .16s ease, visibility .16s;
+	transition: opacity .16s ease, transform .16s ease, visibility 0s linear .16s;
 }
 
 /* Three ways in: hover for mice, focus-within for keyboards (both CSS-only,
@@ -1004,6 +1012,9 @@ html:not(.has-js) .navitem:focus-within > .submenu,
 	opacity: 1;
 	visibility: visible;
 	transform: translateY(0);
+	/* No delay on the way in: the panel must accept focus the instant it
+	   opens, or Tab skips it. */
+	transition: opacity .16s ease, transform .16s ease, visibility 0s;
 }
 
 .submenu a {

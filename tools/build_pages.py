@@ -176,11 +176,22 @@ ICON_DNA = ('<svg class="eyebrow__ico" viewBox="0 0 24 24" aria-hidden="true">'
             '<path d="M17 2c0 4-10 4-10 8s10 4 10 8" fill="none" stroke="currentColor" '
             'stroke-width="2" stroke-linecap="round"/></svg>')
 
+# Social profiles. The value is the profile URL, or None when the account
+# does not exist yet.
+#
+# A None entry renders nothing at all. These were previously anchors pointing
+# at href="#", which look like links, take keyboard focus and announce
+# themselves to a screen reader as "X (Twitter), link" — and then do nothing
+# but jump to the top of the page. An icon that behaves that way is worse
+# than an absent one: it spends a keyboard user's attention and returns
+# nothing for it.
+#
+# Fill in a URL and the icon comes back, with no other change needed.
 SOCIAL = {
-    "X (Twitter)": "M18.9 2H22l-7.1 8.1L23.2 22h-6.5l-5.1-6.6L5.8 22H2.7l7.6-8.7L1.5 2H8l4.6 6.1L18.9 2Zm-1.1 18h1.7L7.3 3.7H5.5L17.8 20Z",
-    "Facebook": "M13.5 22v-8h2.7l.4-3.1h-3.1V8.9c0-.9.25-1.5 1.55-1.5H16.7V4.6c-.29-.04-1.28-.13-2.44-.13-2.42 0-4.07 1.47-4.07 4.18v2.24H7.5V14h2.69v8h3.31Z",
-    "LinkedIn": "M6.9 21H3.5V9h3.4v12ZM5.2 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4ZM21 21h-3.4v-5.8c0-1.4 0-3.2-1.9-3.2s-2.2 1.5-2.2 3.1V21H10V9h3.3v1.6h.05a3.6 3.6 0 0 1 3.25-1.8c3.5 0 4.4 2.3 4.4 5.3V21Z",
-    "Instagram": "M12 2.2c3.2 0 3.6 0 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.25.07 1.62.07 4.81 0 3.2 0 3.57-.07 4.81-.15 3.23-1.66 4.77-4.92 4.92-1.25.06-1.62.07-4.85.07-3.2 0-3.57 0-4.81-.07-3.27-.15-4.77-1.7-4.92-4.92C2.21 15.57 2.2 15.2 2.2 12c0-3.19 0-3.56.07-4.81.15-3.23 1.66-4.77 4.92-4.92C8.43 2.21 8.8 2.2 12 2.2Zm0 5.16a4.64 4.64 0 1 0 0 9.28 4.64 4.64 0 0 0 0-9.28Zm0 7.65a3.01 3.01 0 1 1 0-6.02 3.01 3.01 0 0 1 0 6.02Zm4.83-8.89a1.08 1.08 0 1 0 0 2.17 1.08 1.08 0 0 0 0-2.17Z",
+    "X (Twitter)": (None, "M18.9 2H22l-7.1 8.1L23.2 22h-6.5l-5.1-6.6L5.8 22H2.7l7.6-8.7L1.5 2H8l4.6 6.1L18.9 2Zm-1.1 18h1.7L7.3 3.7H5.5L17.8 20Z"),
+    "Facebook": (None, "M13.5 22v-8h2.7l.4-3.1h-3.1V8.9c0-.9.25-1.5 1.55-1.5H16.7V4.6c-.29-.04-1.28-.13-2.44-.13-2.42 0-4.07 1.47-4.07 4.18v2.24H7.5V14h2.69v8h3.31Z"),
+    "LinkedIn": (None, "M6.9 21H3.5V9h3.4v12ZM5.2 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4ZM21 21h-3.4v-5.8c0-1.4 0-3.2-1.9-3.2s-2.2 1.5-2.2 3.1V21H10V9h3.3v1.6h.05a3.6 3.6 0 0 1 3.25-1.8c3.5 0 4.4 2.3 4.4 5.3V21Z"),
+    "Instagram": (None, "M12 2.2c3.2 0 3.6 0 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.25.07 1.62.07 4.81 0 3.2 0 3.57-.07 4.81-.15 3.23-1.66 4.77-4.92 4.92-1.25.06-1.62.07-4.85.07-3.2 0-3.57 0-4.81-.07-3.27-.15-4.77-1.7-4.92-4.92C2.21 15.57 2.2 15.2 2.2 12c0-3.19 0-3.56.07-4.81.15-3.23 1.66-4.77 4.92-4.92C8.43 2.21 8.8 2.2 12 2.2Zm0 5.16a4.64 4.64 0 1 0 0 9.28 4.64 4.64 0 0 0 0-9.28Zm0 7.65a3.01 3.01 0 1 1 0-6.02 3.01 3.01 0 0 1 0 6.02Zm4.83-8.89a1.08 1.08 0 1 0 0 2.17 1.08 1.08 0 0 0 0-2.17Z"),
 }
 
 LOGO_SVG = ('<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="currentColor"/>'
@@ -189,13 +200,35 @@ LOGO_SVG = ('<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="curre
 
 
 def social_links() -> str:
+    """Icon links for the profiles that exist. Returns "" when none do."""
     out = []
-    for label, path in SOCIAL.items():
+    for label, (url, path) in SOCIAL.items():
+        if not url:
+            continue
+        # The icon is decorative, so the accessible name comes from the
+        # aria-label. It names the destination rather than the platform
+        # ("X (Twitter)" not "Twitter icon"), which is what a screen-reader
+        # user needs to decide whether to follow it.
         out.append(
-            f'\t\t\t<a href="#" aria-label="{label}"><svg class="ico" viewBox="0 0 24 24" '
+            f'\t\t\t<a href="{url}" aria-label="{label}" rel="noopener" '
+            f'target="_blank"><svg class="ico" viewBox="0 0 24 24" '
             f'aria-hidden="true"><path d="{path}"/></svg></a>'
         )
     return "\n".join(out)
+
+
+def social_nav() -> str:
+    """The utility-bar social block, omitted entirely when empty.
+
+    An empty <nav aria-label="Social media"> is still a landmark: screen
+    reader users get it in the landmarks list, navigate to it, and find
+    nothing there.
+    """
+    links = social_links()
+    if not links:
+        return ""
+    return ('\t\t<nav class="utilitybar__social" aria-label="Social media">\n'
+            f'{links}\n\t\t</nav>\n')
 
 
 def nav_links(current: str) -> str:
@@ -278,10 +311,7 @@ def head(title: str, description: str, canonical: str | None,
 \t\t\t\t<a href="mailto:{EMAIL}">{EMAIL}</a>
 \t\t\t</li>
 \t\t</ul>
-\t\t<nav class="utilitybar__social" aria-label="Social media">
-{social_links()}
-\t\t</nav>
-\t</div>
+{social_nav()}\t</div>
 </div>
 
 <!-- Header -->
