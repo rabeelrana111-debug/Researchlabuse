@@ -88,12 +88,30 @@ function e($value) {
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Contact | Research Lab USA</title>
-	<meta name="description" content="Questions, corrections and suggestions for what to cover next. Reach us at info@researchlabusa.com.">
+	<title>Contact Research Lab USA — Questions & Corrections</title>
+	<meta name="description" content="Questions about a guide, corrections and suggestions for what to cover next are all welcome. Reach the editorial team at info@researchlabusa.com.">
 	<link rel="canonical" href="https://researchlabusa.com/contact/">
-	<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article","headline":"Contact","description":"Questions, corrections and suggestions for what to cover next. Reach us at info@researchlabusa.com.","mainEntityOfPage":"https://researchlabusa.com/contact/","author":{"@type":"Organization","name":"Research Lab USA","url":"https://researchlabusa.com/"},"publisher":{"@type":"Organization","name":"Research Lab USA","url":"https://researchlabusa.com/"},"datePublished":"2026-08-20","dateModified":"2026-09-23"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://researchlabusa.com/"},{"@type":"ListItem","position":2,"name":"Contact"}]}]}</script>
+	<meta name="theme-color" content="#0A2342">
+	<meta property="og:type" content="website">
+	<meta property="og:site_name" content="Research Lab USA">
+	<meta property="og:title" content="Contact Research Lab USA — Questions & Corrections">
+	<meta property="og:description" content="Questions about a guide, corrections and suggestions for what to cover next are all welcome. Reach the editorial team at info@researchlabusa.com.">
+	<meta property="og:url" content="https://researchlabusa.com/contact/">
+	<meta property="og:image" content="https://researchlabusa.com/assets/og-cover.jpg">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+	<meta property="og:image:alt" content="Research Lab USA — research compound reference guides">
+	<meta property="og:locale" content="en_US">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Contact Research Lab USA — Questions & Corrections">
+	<meta name="twitter:description" content="Questions about a guide, corrections and suggestions for what to cover next are all welcome. Reach the editorial team at info@researchlabusa.com.">
+	<meta name="twitter:image" content="https://researchlabusa.com/assets/og-cover.jpg">
+	<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"ContactPage","name":"Contact","description":"Questions about a guide, corrections and suggestions for what to cover next are all welcome. Reach the editorial team at info@researchlabusa.com.","url":"https://researchlabusa.com/contact/","inLanguage":"en-US","isPartOf":{"@id":"https://researchlabusa.com/#website"},"datePublished":"2026-08-20","dateModified":"2026-09-28"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://researchlabusa.com/"},{"@type":"ListItem","position":2,"name":"Contact"}]}]}</script>
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
-	<link rel="stylesheet" href="/styles.css?v=ee9bc5decf">
+	<link rel="preload" as="image" type="image/webp"
+	      imagesrcset="/assets/ampoules-microscope-480.webp 480w, /assets/ampoules-microscope-960.webp 960w, /assets/ampoules-microscope-1600.webp 1600w"
+	      imagesizes="(min-width: 60rem) 34rem, calc(100vw - 3rem)" fetchpriority="high">
+	<link rel="stylesheet" href="/styles.css?v=5952556a49">
 </head>
 <body>
 
@@ -218,99 +236,101 @@ function e($value) {
 					</div>
 
 					<div class="contactpanel__media">
-						<img src="/assets/ampoules-microscope.jpg"
-						     alt="Glass ampoules on a bench in front of a microscope"
-						     width="1600" height="1067" loading="lazy" decoding="async">
-					</div>
-				</aside>
+						<picture>
+							<source type="image/webp" srcset="/assets/ampoules-microscope-480.webp 480w, /assets/ampoules-microscope-960.webp 960w, /assets/ampoules-microscope-1600.webp 1600w" sizes="(min-width: 60rem) 30rem, calc(100vw - 3rem)">
+							<img src="/assets/ampoules-microscope-960.jpg" srcset="/assets/ampoules-microscope-480.jpg 480w, /assets/ampoules-microscope-960.jpg 960w, /assets/ampoules-microscope-1600.jpg 1600w"
+							     sizes="(min-width: 60rem) 30rem, calc(100vw - 3rem)" alt="Glass ampoules on a bench in front of a microscope" width="1600" height="1067" loading="lazy" decoding="async">
+						</picture>
+\t\t\t\t\t</div>
+\t\t\t\t</aside>
 
-				<!-- Inquiry form -->
-				<div class="contactform">
+\t\t\t\t<!-- Inquiry form -->
+\t\t\t\t<div class="contactform">
 <?php if ($sent): ?>
-					<p class="formnote formnote--ok" role="status">
-						<strong>Thank you &mdash; your message has been sent.</strong>
-						We reply within one business day.
-					</p>
+\t\t\t\t\t<p class="formnote formnote--ok" role="status">
+\t\t\t\t\t\t<strong>Thank you &mdash; your message has been sent.</strong>
+\t\t\t\t\t\tWe reply within one business day.
+\t\t\t\t\t</p>
 <?php endif; ?>
 <?php if ($errors): ?>
-					<div class="formnote formnote--error" role="alert">
-						<strong>Your message was not sent.</strong>
-						<ul>
+\t\t\t\t\t<div class="formnote formnote--error" role="alert">
+\t\t\t\t\t\t<strong>Your message was not sent.</strong>
+\t\t\t\t\t\t<ul>
 <?php foreach ($errors as $error): ?>
-							<li><?= e($error) ?></li>
+\t\t\t\t\t\t\t<li><?= e($error) ?></li>
 <?php endforeach; ?>
-						</ul>
-					</div>
+\t\t\t\t\t\t</ul>
+\t\t\t\t\t</div>
 <?php endif; ?>
 
-					<form method="post" action="/contact/#form" id="form" novalidate>
-						<div class="formgrid">
-							<div class="field">
-								<label class="label" for="name">Your name</label>
-								<input class="input" type="text" id="name" name="name"
-								       value="<?= e($values['name']) ?>" required>
-							</div>
-							<div class="field">
-								<label class="label" for="email">Email address</label>
-								<input class="input" type="email" id="email" name="email"
-								       value="<?= e($values['email']) ?>" required>
-							</div>
-							<div class="field">
-								<label class="label" for="phone">Phone <span class="label__opt">(optional)</span></label>
-								<input class="input" type="tel" id="phone" name="phone"
-								       value="<?= e($values['phone']) ?>">
-							</div>
-							<div class="field">
-								<label class="label" for="subject">Subject <span class="label__opt">(optional)</span></label>
-								<input class="input" type="text" id="subject" name="subject"
-								       value="<?= e($values['subject']) ?>">
-							</div>
-						</div>
+\t\t\t\t\t<form method="post" action="/contact/#form" id="form" novalidate>
+\t\t\t\t\t\t<div class="formgrid">
+\t\t\t\t\t\t\t<div class="field">
+\t\t\t\t\t\t\t\t<label class="label" for="name">Your name</label>
+\t\t\t\t\t\t\t\t<input class="input" type="text" id="name" name="name"
+\t\t\t\t\t\t\t\t       value="<?= e($values['name']) ?>" required>
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t\t<div class="field">
+\t\t\t\t\t\t\t\t<label class="label" for="email">Email address</label>
+\t\t\t\t\t\t\t\t<input class="input" type="email" id="email" name="email"
+\t\t\t\t\t\t\t\t       value="<?= e($values['email']) ?>" required>
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t\t<div class="field">
+\t\t\t\t\t\t\t\t<label class="label" for="phone">Phone <span class="label__opt">(optional)</span></label>
+\t\t\t\t\t\t\t\t<input class="input" type="tel" id="phone" name="phone"
+\t\t\t\t\t\t\t\t       value="<?= e($values['phone']) ?>">
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t\t<div class="field">
+\t\t\t\t\t\t\t\t<label class="label" for="subject">Subject <span class="label__opt">(optional)</span></label>
+\t\t\t\t\t\t\t\t<input class="input" type="text" id="subject" name="subject"
+\t\t\t\t\t\t\t\t       value="<?= e($values['subject']) ?>">
+\t\t\t\t\t\t\t</div>
+\t\t\t\t\t\t</div>
 
-						<div class="field">
-							<label class="label" for="message">Your message</label>
-							<textarea class="textarea" id="message" name="message" rows="8"
-							          required><?= e($values['message']) ?></textarea>
-						</div>
+\t\t\t\t\t\t<div class="field">
+\t\t\t\t\t\t\t<label class="label" for="message">Your message</label>
+\t\t\t\t\t\t\t<textarea class="textarea" id="message" name="message" rows="8"
+\t\t\t\t\t\t\t          required><?= e($values['message']) ?></textarea>
+\t\t\t\t\t\t</div>
 
-						<!-- Honeypot: hidden from people, irresistible to bots. -->
-						<div class="hp" aria-hidden="true">
-							<label for="company">Company</label>
-							<input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
-						</div>
+\t\t\t\t\t\t<!-- Honeypot: hidden from people, irresistible to bots. -->
+\t\t\t\t\t\t<div class="hp" aria-hidden="true">
+\t\t\t\t\t\t\t<label for="company">Company</label>
+\t\t\t\t\t\t\t<input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
+\t\t\t\t\t\t</div>
 
-						<button class="btn btn--primary" type="submit">Send message</button>
-						<p class="note-sm">We use what you send through this form only to
-						read and answer your inquiry. Please do not submit confidential,
-						patient or medical information. We do not sell contact-form
-						information or share it with anyone for their own marketing. It
-						may be handled by the service providers that run our website and
-						email, under confidentiality obligations. For the detail, read our
-						<a href="/privacy/">Privacy Policy</a> and
-						<a href="/terms/">Terms of Use</a>.</p>
-					</form>
-				</div>
-			</div>
-		</div>
-	</section>
+\t\t\t\t\t\t<button class="btn btn--primary" type="submit">Send message</button>
+\t\t\t\t\t\t<p class="note-sm">We use what you send through this form only to
+\t\t\t\t\t\tread and answer your inquiry. Please do not submit confidential,
+\t\t\t\t\t\tpatient or medical information. We do not sell contact-form
+\t\t\t\t\t\tinformation or share it with anyone for their own marketing. It
+\t\t\t\t\t\tmay be handled by the service providers that run our website and
+\t\t\t\t\t\temail, under confidentiality obligations. For the detail, read our
+\t\t\t\t\t\t<a href="/privacy/">Privacy Policy</a> and
+\t\t\t\t\t\t<a href="/terms/">Terms of Use</a>.</p>
+\t\t\t\t\t</form>
+\t\t\t\t</div>
+\t\t\t</div>
+\t\t</div>
+\t</section>
 
-	<section class="section section--tight">
-		<div class="wrap">
-			<div class="measure prose">
-				<h2>What we can help with</h2>
-				<ul>
-					<li>Questions about anything in a guide</li>
-					<li>Corrections, including sources we have missed or misread</li>
-					<li>Suggestions for compounds or topics to cover next</li>
-					<li>Requests to cite or reference our material</li>
-				</ul>
+\t<section class="section section--tight">
+\t\t<div class="wrap">
+\t\t\t<div class="measure prose">
+\t\t\t\t<h2>What we can help with</h2>
+\t\t\t\t<ul>
+\t\t\t\t\t<li>Questions about anything in a guide</li>
+\t\t\t\t\t<li>Corrections, including sources we have missed or misread</li>
+\t\t\t\t\t<li>Suggestions for compounds or topics to cover next</li>
+\t\t\t\t\t<li>Requests to cite or reference our material</li>
+\t\t\t\t</ul>
 
-				<h2>What we cannot help with</h2>
-				<p>We do not give dosing guidance or advise on human or veterinary
-				use, and we do not vet suppliers or settle disputes with them.
-				Messages asking for those will not get a useful reply, and we would
-				rather say so here than leave you waiting for one.</p>
-				<p>Avid Peptides is our peptide supply partner, and you
+\t\t\t\t<h2>What we cannot help with</h2>
+\t\t\t\t<p>We do not give dosing guidance or advise on human or veterinary
+\t\t\t\tuse, and we do not vet suppliers or settle disputes with them.
+\t\t\t\tMessages asking for those will not get a useful reply, and we would
+\t\t\t\trather say so here than leave you waiting for one.</p>
+\t\t\t\t<p>Avid Peptides is our peptide supply partner, and you
 				will see them featured on our peptide pages. Questions about their
 				catalogue, an order or a batch should go to them directly &mdash; we
 				cannot answer those for them.</p>
