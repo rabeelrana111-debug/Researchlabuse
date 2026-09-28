@@ -325,6 +325,37 @@ def nav_links(current: str) -> str:
     return "\n".join(out)
 
 
+# --------------------------------------------------------------------------
+# Analytics
+# --------------------------------------------------------------------------
+#
+# Google Analytics 4. The snippet is Google's own, unmodified, so it can be
+# compared against the one in the GA property without hunting for differences.
+#
+# The preconnect above it opens the connection to googletagmanager.com while
+# the HTML is still parsing. gtag.js is async and third-party, so without it
+# the DNS lookup, TCP handshake and TLS negotiation all happen in series after
+# the tag is discovered — typically 100-300ms on a phone before a single byte
+# of the script arrives.
+#
+# This does set cookies (_ga and _ga_<id>) and does send page views to Google,
+# which is why the privacy policy now says so. If the measurement ID ever
+# changes, it changes here and nowhere else.
+GA_MEASUREMENT_ID = "G-X5GMPYGNT2"
+
+ANALYTICS = f"""\t<link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+\t<!-- Google tag (gtag.js) -->
+\t<script async src="https://www.googletagmanager.com/gtag/js?id={GA_MEASUREMENT_ID}"></script>
+\t<script>
+\t\twindow.dataLayer = window.dataLayer || [];
+\t\tfunction gtag(){{dataLayer.push(arguments);}}
+\t\tgtag('js', new Date());
+
+\t\tgtag('config', '{GA_MEASUREMENT_ID}');
+\t</script>
+"""
+
+
 def social_meta(full_title: str, description: str,
                 canonical: str | None) -> str:
     """Open Graph and Twitter Card tags.
@@ -395,7 +426,7 @@ def head(title: str, description: str, canonical: str | None,
 <head>
 \t<meta charset="utf-8">
 \t<meta name="viewport" content="width=device-width, initial-scale=1">
-\t<title>{full_title}</title>
+{ANALYTICS}\t<title>{full_title}</title>
 \t<meta name="description" content="{description}">
 \t{index_meta}
 \t<meta name="theme-color" content="#0A2342">
@@ -1138,10 +1169,13 @@ NOT_FOUND = """\t<section class="section">
 #
 # These are an honest description of what this site actually does, written so
 # a reader can check each statement against the site itself: it has no
-# accounts, no shopping cart, no analytics and no advertising network, and
-# the only personal data it receives is what someone types into the contact
-# form. That makes the policy short, and short is a feature — a policy that
-# claims machinery the site does not have is worse than none.
+# accounts, no shopping cart and no advertising network. It receives what
+# someone types into the contact form, and Google Analytics page views.
+#
+# The policy must describe what the site actually does. It previously said
+# "we set no cookies and run no analytics", and invited the reader to check in
+# DevTools — a claim that adding the GA tag turned into a demonstrable lie on
+# a site whose whole pitch is candour. Change the tags, change this page.
 #
 # They still need a lawyer's eye before they can be relied on. State privacy
 # statutes (notably the CCPA/CPRA in California) attach obligations to
@@ -1170,37 +1204,61 @@ PRIVACY = hero(
 \t\t<div class="wrap">
 \t\t\t<div class="measure prose">
 \t\t\t\t<h2>What we collect</h2>
-\t\t\t\t<p>Only what you type into our contact form: your name, your email
-\t\t\t\taddress, a subject line and your message. Every field is one you fill
-\t\t\t\tin yourself &mdash; we do not collect anything about you in the
-\t\t\t\tbackground.</p>
-\t\t\t\t<p>Like every web server, ours records requests it receives,
-\t\t\t\tincluding IP addresses, in standard server logs kept by our hosting
-\t\t\t\tprovider. Those logs exist for security and troubleshooting. We do
-\t\t\t\tnot use them to build a profile of you.</p>
+\t\t\t\t<p><strong>What you send us.</strong> Whatever you type into our
+\t\t\t\tcontact form: your name, your email address, a subject line and your
+\t\t\t\tmessage. Every field is one you fill in yourself.</p>
+\t\t\t\t<p><strong>How the site is used.</strong> We use Google Analytics to
+\t\t\t\tsee which guides get read and how people arrive at them, so we know
+\t\t\t\twhat to write next. It records things like the pages you view, roughly
+\t\t\t\twhere in the world you are, the kind of device and browser you use,
+\t\t\t\tand which site or search you came from. It does not tell us who you
+\t\t\t\tare, and we never combine it with anything you send through the
+\t\t\t\tcontact form.</p>
+\t\t\t\t<p><strong>Server logs.</strong> Like every web server, ours records
+\t\t\t\tthe requests it receives, including IP addresses, in standard logs
+\t\t\t\tkept by our hosting provider. Those exist for security and
+\t\t\t\ttroubleshooting. We do not use them to build a profile of you.</p>
+
+\t\t\t\t<h2>Cookies</h2>
+\t\t\t\t<p>Google Analytics sets two cookies, named <code>_ga</code> and
+\t\t\t\t<code>_ga_&lt;property&gt;</code>. They let it tell a returning
+\t\t\t\tvisitor from a new one so the counts are not wildly inflated. They
+\t\t\t\tcarry a random identifier, not your name or email address.</p>
+\t\t\t\t<p>We set no other cookies, and we run no advertising or
+\t\t\t\tremarketing tags. You can check both claims yourself: open your
+\t\t\t\tbrowser&rsquo;s developer tools on any page of this site and look at
+\t\t\t\tthe Application and Network tabs.</p>
+\t\t\t\t<p>To opt out, use your browser&rsquo;s Do Not Track or cookie
+\t\t\t\tsettings, a content blocker, or
+\t\t\t\t<a href="https://tools.google.com/dlpage/gaoptout" rel="noopener"
+\t\t\t\ttarget="_blank">Google&rsquo;s official opt-out add-on<span class="sr-only"> (opens in a new tab)</span></a>.
+\t\t\t\tNothing on this site stops working if you do &mdash; the analytics
+\t\t\t\tare for us, not for you.</p>
 
 \t\t\t\t<h2>What we do not do</h2>
 \t\t\t\t<ul>
-\t\t\t\t\t<li>We set no cookies and run no analytics or tracking scripts.
-\t\t\t\t\tYou can confirm this: open your browser&rsquo;s developer tools on
-\t\t\t\t\tany page of this site and look at the Application and Network
-\t\t\t\t\ttabs.</li>
 \t\t\t\t\t<li>We have no user accounts and no shopping cart, so there is no
 \t\t\t\t\tpassword or payment information to lose.</li>
 \t\t\t\t\t<li>We do not sell your information, and we do not share it with
 \t\t\t\t\tanyone for their own marketing.</li>
+\t\t\t\t\t<li>We do not run advertising, retargeting or profiling.</li>
 \t\t\t\t</ul>
 
 \t\t\t\t<h2>Why we use it</h2>
-\t\t\t\t<p>To read your message and reply to it. That is the only purpose.
-\t\t\t\tWe will not add you to a mailing list because you asked a
-\t\t\t\tquestion.</p>
+\t\t\t\t<p>Contact-form messages are used to read your message and reply to
+\t\t\t\tit. That is the only purpose &mdash; we will not add you to a mailing
+\t\t\t\tlist because you asked a question.</p>
+\t\t\t\t<p>Analytics are used to decide what to write and to find pages that
+\t\t\t\tare broken or unread. Nothing more.</p>
 
 \t\t\t\t<h2>Who else sees it</h2>
 \t\t\t\t<p>Our web host processes the form submission and carries the
 \t\t\t\tresulting email, and our email provider stores it. They act as
 \t\t\t\tservice providers on our behalf and are not free to use your message
 \t\t\t\tfor their own purposes.</p>
+\t\t\t\t<p>Google processes the analytics data as our provider, under its own
+\t\t\t\tterms. That processing happens on Google servers, which may be
+\t\t\t\toutside your country.</p>
 \t\t\t\t<p>Pages in our peptides section link to
 \t\t\t\t<a href=\"""" + PARTNER_URL + """\" rel="sponsored noopener" target="_blank">""" + PARTNER_NAME + """<span class="sr-only"> (opens in a new tab)</span></a>,
 \t\t\t\tour peptide supply partner. Following that link takes you to their
@@ -1212,6 +1270,8 @@ PRIVACY = hero(
 \t\t\t\tup to two years afterwards, so we can pick up an earlier thread.
 \t\t\t\tAfter that they are deleted. Ask us to delete yours sooner and we
 \t\t\t\twill.</p>
+\t\t\t\t<p>Analytics records are kept for the retention period set on our
+\t\t\t\tGoogle Analytics property, after which Google deletes them.</p>
 
 \t\t\t\t<h2>Your choices</h2>
 \t\t\t\t<p>Write to <a href="mailto:""" + EMAIL + '">' + EMAIL + """</a> to
@@ -1345,8 +1405,8 @@ def main() -> None:
 
     write("privacy", "Privacy Policy",
           "What this site collects, why, who else sees it and how long it is "
-          "kept. No cookies, no analytics and no tracking scripts \u2014 only "
-          "what you type into the contact form.", PRIVACY,
+          "kept: contact-form messages, Google Analytics page views, and no "
+          "advertising or profiling of any kind.", PRIVACY,
           full_title="Privacy Policy \u2014 Research Lab USA",
           page_type="WebPage",
           crumbs=[("Home", "/"), ("Privacy Policy", None)])
